@@ -1,8 +1,6 @@
 export const runtime = "nodejs";
 
-import chromium from "@sparticuz/chromium-min";
 import puppeteer from "puppeteer-core";
-
 import fs from "fs";
 import path from "path";
 
@@ -40,22 +38,20 @@ export async function POST(req: Request) {
       .replaceAll("{{amount}}", invoice.total?.toString() || "0")
       .replaceAll("{{items}}", itemsHTML);
 
-    const executablePath = await chromium.executablePath();
+    // Connect to remote chromium
+    const browser = await puppeteer.connect({
 
-    const browser = await puppeteer.launch({
-
-      args: chromium.args,
-
-      executablePath,
-
-      headless: true,
+      browserWSEndpoint:
+        process.env.BROWSERLESS_URL!
 
     });
 
     const page = await browser.newPage();
 
     await page.setContent(html, {
+
       waitUntil: "networkidle0",
+
     });
 
     const pdf = await page.pdf({
@@ -85,11 +81,11 @@ export async function POST(req: Request) {
 
   catch (error) {
 
-    console.error("PDF generation error:", error);
+    console.error(error);
 
     return NextResponse.json({
 
-      error: "PDF generation failed",
+      error: "PDF failed",
 
     }, { status: 500 });
 
