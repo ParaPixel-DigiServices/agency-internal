@@ -21,10 +21,7 @@ export async function POST(req: Request) {
       "template.html"
     );
 
-    let html = fs.readFileSync(
-      templatePath,
-      "utf8"
-    );
+    let html = fs.readFileSync(templatePath, "utf8");
 
     const itemsHTML = `
       <tr>
