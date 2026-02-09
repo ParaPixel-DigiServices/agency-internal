@@ -49,17 +49,11 @@ const navItems = [
 ]
 
 export default function Sidebar() {
+
   const pathname = usePathname()
-  const [isAuth, setIsAuth] = useState(false)
-  const [isMounted, setIsMounted] = useState(false)
 
-  useEffect(() => {
-    setIsMounted(true)
-    setIsAuth(isAuthenticated())
-  }, [])
-
-  // Return null during SSR and until mounted to avoid hydration mismatch
-  if (!isMounted || !isAuth) return null
+  if (!isAuthenticated()) return null;
+    
 
   return (
     <div className="w-64 h-screen border-r bg-background p-4">
