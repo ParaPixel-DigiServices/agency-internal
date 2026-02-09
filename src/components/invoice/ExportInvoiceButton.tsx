@@ -6,42 +6,48 @@ import { Button } from "@/components/ui/button";
 
 import { Download, Loader2 } from "lucide-react";
 
+import { toast } from "sonner";
+
 
 export default function ExportInvoiceButton({
-  invoice,
+  invoiceId,
+  invoiceNumber,
 }: {
-  invoice: any;
+  invoiceId: string;
+  invoiceNumber: string;
 }) {
 
   const [loading, setLoading] =
     useState(false);
 
 
-
-  const exportPDF = async () => {
+  async function exportPDF() {
 
     try {
 
       setLoading(true);
 
+      const res =
+        await fetch(
+          "/api/invoice/export",
+          {
 
-      const res = await fetch(
-        "/api/invoice/export",
-        {
+            method: "POST",
 
-          method: "POST",
+            headers: {
 
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
+              "Content-Type":
+                "application/json",
 
-          body: JSON.stringify({
-            invoiceId: invoice.id,
-          }),
+            },
 
-        }
-      );
+            body:
+              JSON.stringify({
+                invoiceId
+              }),
+
+          }
+        );
 
 
       if (!res.ok) {
@@ -54,7 +60,7 @@ export default function ExportInvoiceButton({
           text
         );
 
-        alert(
+        toast.error(
           "Failed to export invoice"
         );
 
@@ -68,29 +74,29 @@ export default function ExportInvoiceButton({
 
 
       const url =
-        window.URL.createObjectURL(
-          blob
-        );
+        window.URL.createObjectURL(blob);
 
 
-      const a =
+      const link =
         document.createElement("a");
 
-      a.href = url;
+      link.href = url;
 
-      a.download =
-        `${invoice.invoice_number}.pdf`;
+      link.download =
+        `${invoiceNumber}.pdf`;
 
-      document.body.appendChild(a);
+      document.body.appendChild(link);
 
-      a.click();
+      link.click();
 
-      a.remove();
+      document.body.removeChild(link);
 
 
-      // cleanup memory
-      window.URL.revokeObjectURL(
-        url
+      window.URL.revokeObjectURL(url);
+
+
+      toast.success(
+        "Invoice exported"
       );
 
     }
@@ -102,8 +108,8 @@ export default function ExportInvoiceButton({
         error
       );
 
-      alert(
-        "Unexpected error exporting invoice"
+      toast.error(
+        "Export failed"
       );
 
     }
@@ -114,8 +120,7 @@ export default function ExportInvoiceButton({
 
     }
 
-  };
-
+  }
 
 
   return (
@@ -131,14 +136,14 @@ export default function ExportInvoiceButton({
 
         <>
           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          Exporting
+          Exporting...
         </>
 
       ) : (
 
         <>
           <Download className="w-4 h-4 mr-2" />
-          Export
+          Export PDF
         </>
 
       )}
