@@ -27,6 +27,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <title>ParaPixel Admin Dashboard</title>
+        <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+      </head>
       <body>
         <AuthGuard>
           <LayoutContent>{children}</LayoutContent>
