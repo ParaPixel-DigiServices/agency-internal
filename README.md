@@ -70,8 +70,10 @@ The ParaPixel Admin Dashboard is a comprehensive internal management system buil
 - Domain-restricted access (@parapixel.net only)
 - Supabase authentication and session management
 - Automatic session refresh and validation
-- Protected routes and API endpoints
+- Protected routes and API endpoints with Bearer token authentication
+- Session-based authorization on all API routes
 - No password management required
+- Service role key isolation (never exposed to client)
 
 ### 🎨 User Experience
 
@@ -328,7 +330,21 @@ This is an internal ParaPixel project. For contributions, please contact the dev
 
 ## Security Notice
 
-⚠️ **Important:** Never commit the `.env` file to version control. Always use `.env.example` for reference and keep sensitive credentials secure.
+⚠️ **Critical Security Measures:**
+
+1. **Never commit the `.env` file** to version control. The `.gitignore` is configured to exclude it, but always verify before committing.
+
+2. **Protect Service Role Key**: The `SUPABASE_SERVICE_ROLE_KEY` bypasses all Row Level Security policies. Never expose it to the client or in public repositories.
+
+3. **Rotate Credentials Immediately if Exposed**: If any credentials are accidentally committed or exposed:
+   - Regenerate all Supabase keys from the Supabase Dashboard
+   - Generate a new Browserless token
+   - Update environment variables in all deployment environments
+   - Review git history to ensure complete removal
+
+4. **API Security**: All API routes are protected with Bearer token authentication. Only authenticated users with @parapixel.net email addresses can access API endpoints.
+
+5. **Use `.env.example` as Template**: Always reference `.env.example` for required environment variables and never add actual credentials to it.
 
 ## Support
 

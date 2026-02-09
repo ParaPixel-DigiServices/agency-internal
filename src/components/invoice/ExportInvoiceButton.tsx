@@ -8,6 +8,7 @@ import { Download, Loader2 } from "lucide-react";
 
 import { toast } from "sonner";
 
+import { supabase } from "@/lib/supabase/client";
 
 export default function ExportInvoiceButton({
   invoiceId,
@@ -16,74 +17,64 @@ export default function ExportInvoiceButton({
   invoiceId: string;
   invoiceNumber: string;
 }) {
-
-  const [loading, setLoading] =
-    useState(false);
-
+  const [loading, setLoading] = useState(false);
 
   async function exportPDF() {
-
     try {
-
       setLoading(true);
 
-      const res =
-        await fetch(
-          "/api/invoice/export",
-          {
+      // Get current session token
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
 
-            method: "POST",
-
-            headers: {
-
-              "Content-Type":
-                "application/json",
-
-            },
-
-            body:
-              JSON.stringify({
-                invoiceId
-              }),
-
-          }
-        );
-
-
-      if (!res.ok) {
-
-        const text =
-          await res.text();
-
-        console.error(
-          "Export failed:",
-          text
-        );
-
-        toast.error(
-          "Failed to export invoice"
-        );
-
+      if (sessionError || !session) {
+        toast.error("Authentication required. Please log in again.");
+        setLoading(false);
         return;
-
       }
 
+      const res = await fetch("/api/invoice/export", {
+        method: "POST",
 
-      const blob =
-        await res.blob();
+        headers: {
+          "Content-Type": "application/json",
 
+          Authorization: `Bearer ${session.access_token}`,
+        },
 
-      const url =
-        window.URL.createObjectURL(blob);
+        body: JSON.stringify({
+          invoiceId,
+        }),
+      });
 
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+          toast.error("Authentication failed. Please log in again.");
+          // Optionally redirect to login
+          // window.location.href = "/login";
+          return;
+        }
 
-      const link =
-        document.createElement("a");
+        const text = await res.text();
+
+        console.error("Export failed:", text);
+
+        toast.error("Failed to export invoice");
+
+        return;
+      }
+
+      const blob = await res.blob();
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
 
       link.href = url;
 
-      link.download =
-        `${invoiceNumber}.pdf`;
+      link.download = `${invoiceNumber}.pdf`;
 
       document.body.appendChild(link);
 
@@ -91,65 +82,31 @@ export default function ExportInvoiceButton({
 
       document.body.removeChild(link);
 
-
       window.URL.revokeObjectURL(url);
 
+      toast.success("Invoice exported");
+    } catch (error) {
+      console.error("Export error:", error);
 
-      toast.success(
-        "Invoice exported"
-      );
-
-    }
-
-    catch (error) {
-
-      console.error(
-        "Export error:",
-        error
-      );
-
-      toast.error(
-        "Export failed"
-      );
-
-    }
-
-    finally {
-
+      toast.error("Export failed");
+    } finally {
       setLoading(false);
-
     }
-
   }
 
-
   return (
-
-    <Button
-      size="sm"
-      variant="outline"
-      onClick={exportPDF}
-      disabled={loading}
-    >
-
+    <Button size="sm" variant="outline" onClick={exportPDF} disabled={loading}>
       {loading ? (
-
         <>
           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
           Exporting...
         </>
-
       ) : (
-
         <>
           <Download className="w-4 h-4 mr-2" />
           Export PDF
         </>
-
       )}
-
     </Button>
-
   );
-
 }
