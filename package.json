@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
-    "@sparticuz/chromium": "^143.0.4",
+    "@sparticuz/chromium": "^123.0.1",
     "@supabase/supabase-js": "^2.95.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -18,7 +18,7 @@
     "jspdf": "^4.1.0",
     "lucide-react": "^0.563.0",
     "next": "16.1.6",
-    "puppeteer-core": "^24.37.2",
+    "puppeteer-core": "^22.13.1",
     "radix-ui": "^1.4.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",

@@ -14,7 +14,6 @@ export async function POST(req: Request) {
 
     const invoice = await req.json();
 
-    // Load template
     const templatePath = path.join(
       process.cwd(),
       "public",
@@ -27,7 +26,6 @@ export async function POST(req: Request) {
       "utf8"
     );
 
-    // Build items
     const itemsHTML = `
       <tr>
         <td>${invoice.projects?.name || "Service"}</td>
@@ -37,58 +35,32 @@ export async function POST(req: Request) {
       </tr>
     `;
 
-    // Replace variables
     html = html
-      .replaceAll(
-        "{{invoice_number}}",
-        invoice.invoice_number || ""
-      )
-      .replaceAll(
-        "{{issue_date}}",
-        invoice.issue_date || ""
-      )
-      .replaceAll(
-        "{{client_name}}",
-        invoice.clients?.name || ""
-      )
-      .replaceAll(
-        "{{client_address}}",
-        invoice.clients?.address || ""
-      )
-      .replaceAll(
-        "{{amount}}",
-        invoice.total?.toString() || "0"
-      )
-      .replaceAll(
-        "{{items}}",
-        itemsHTML
-      );
+      .replaceAll("{{invoice_number}}", invoice.invoice_number || "")
+      .replaceAll("{{issue_date}}", invoice.issue_date || "")
+      .replaceAll("{{client_name}}", invoice.clients?.name || "")
+      .replaceAll("{{client_address}}", invoice.clients?.address || "")
+      .replaceAll("{{amount}}", invoice.total?.toString() || "0")
+      .replaceAll("{{items}}", itemsHTML);
 
-    // Launch chromium (VERCEL SAFE)
+    // CRITICAL FIX FOR VERCEL
+    const executablePath = await chromium.executablePath();
+
     const browser = await puppeteer.launch({
 
       args: chromium.args,
 
-      executablePath:
-        await chromium.executablePath(),
+      executablePath,
 
       headless: true,
-
-      defaultViewport: {
-        width: 1240,
-        height: 1754,
-      },
 
     });
 
     const page = await browser.newPage();
 
-    await page.setContent(
-      html,
-      {
-        waitUntil: "networkidle0",
-      }
-    );
+    await page.setContent(html, {
+      waitUntil: "networkidle0",
+    });
 
     const pdf = await page.pdf({
 
@@ -113,8 +85,7 @@ export async function POST(req: Request) {
 
       headers: {
 
-        "Content-Type":
-          "application/pdf",
+        "Content-Type": "application/pdf",
 
         "Content-Disposition":
           `attachment; filename=${invoice.invoice_number}.pdf`,
@@ -134,12 +105,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
 
-      error:
-        "Failed to generate PDF",
+      error: "PDF generation failed",
 
-    }, {
-      status: 500,
-    });
+    }, { status: 500 });
 
   }
 
