@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { supabase } from "@/lib/supabase/client"
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase/client";
 
 import {
   Dialog,
@@ -9,125 +9,137 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface Client {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 interface Project {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 export default function AddPaymentDialog({
   onPaymentAdded,
 }: {
-  onPaymentAdded: () => void
+  onPaymentAdded: () => void;
 }) {
+  const [open, setOpen] = useState(false);
 
-  const [open, setOpen] = useState(false)
-
-  const [clients, setClients] = useState<Client[]>([])
-  const [projects, setProjects] = useState<Project[]>([])
+  const [clients, setClients] = useState<Client[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
 
   const [form, setForm] = useState({
     client_id: "",
     project_id: "",
     amount: "",
     method: "",
-  })
+  });
 
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchClients()
-    fetchProjects()
-  }, [])
+    fetchClients();
+  }, []);
+
+  // Fetch projects when client is selected
+  useEffect(() => {
+    if (form.client_id) {
+      fetchProjectsByClient(form.client_id);
+    } else {
+      setProjects([]);
+    }
+  }, [form.client_id]);
 
   const fetchClients = async () => {
     const { data } = await supabase
       .from("clients")
       .select("id, name")
+      .order("name");
 
-    if (data) setClients(data)
-  }
+    if (data) setClients(data);
+  };
 
-  const fetchProjects = async () => {
+  const fetchProjectsByClient = async (clientId: string) => {
     const { data } = await supabase
       .from("projects")
       .select("id, name")
+      .eq("client_id", clientId)
+      .order("name");
 
-    if (data) setProjects(data)
-  }
+    if (data) setProjects(data);
+  };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    })
-  }
+    const { name, value } = e.target;
+
+    // Reset project when client changes
+    if (name === "client_id") {
+      setForm({
+        ...form,
+        client_id: value,
+        project_id: "", // Clear project selection
+      });
+    } else {
+      setForm({
+        ...form,
+        [name]: value,
+      });
+    }
+  };
 
   const handleSubmit = async () => {
+    if (!form.client_id || !form.project_id || !form.amount) return;
 
-    if (!form.client_id || !form.project_id || !form.amount) return
+    setLoading(true);
 
-    setLoading(true)
+    const { error } = await supabase.from("payments").insert([
+      {
+        client_id: form.client_id,
+        project_id: form.project_id,
+        amount: Number(form.amount),
+        method: form.method,
+      },
+    ]);
 
-    const { error } = await supabase
-      .from("payments")
-      .insert([
-        {
-          client_id: form.client_id,
-          project_id: form.project_id,
-          amount: Number(form.amount),
-          method: form.method,
-        },
-      ])
-
-    setLoading(false)
+    setLoading(false);
 
     if (!error) {
-
       setForm({
         client_id: "",
         project_id: "",
         amount: "",
         method: "",
-      })
+      });
 
-      setOpen(false)
-      onPaymentAdded()
-
+      setOpen(false);
+      onPaymentAdded();
     } else {
-      alert(error.message)
+      alert(error.message);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-
       <DialogTrigger asChild>
         <Button>Add Payment</Button>
       </DialogTrigger>
 
       <DialogContent>
-
         <DialogHeader>
           <DialogTitle>Add Payment</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-
           <div>
-
             <Label>Client *</Label>
 
             <select
@@ -136,7 +148,6 @@ export default function AddPaymentDialog({
               onChange={handleChange}
               className="w-full border rounded p-2 bg-background"
             >
-
               <option value="">Select client</option>
 
               {clients.map((client) => (
@@ -144,32 +155,33 @@ export default function AddPaymentDialog({
                   {client.name}
                 </option>
               ))}
-
             </select>
-
           </div>
 
           <div>
-
             <Label>Project *</Label>
 
             <select
               name="project_id"
               value={form.project_id}
               onChange={handleChange}
-              className="w-full border rounded p-2 bg-background"
+              disabled={!form.client_id}
+              className="w-full border rounded p-2 bg-background disabled:opacity-50 disabled:cursor-not-allowed"
             >
-
-              <option value="">Select project</option>
+              <option value="">
+                {!form.client_id
+                  ? "Select a client first"
+                  : projects.length === 0
+                    ? "No projects for this client"
+                    : "Select project"}
+              </option>
 
               {projects.map((project) => (
                 <option key={project.id} value={project.id}>
                   {project.name}
                 </option>
               ))}
-
             </select>
-
           </div>
 
           <div>
@@ -192,18 +204,11 @@ export default function AddPaymentDialog({
             />
           </div>
 
-          <Button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="w-full"
-          >
+          <Button onClick={handleSubmit} disabled={loading} className="w-full">
             {loading ? "Adding..." : "Add Payment"}
           </Button>
-
         </div>
-
       </DialogContent>
-
     </Dialog>
-  )
+  );
 }

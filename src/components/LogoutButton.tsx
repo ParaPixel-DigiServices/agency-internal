@@ -1,35 +1,29 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase/client";
+import { useState } from "react";
 
 export default function LogoutButton() {
+  const [loading, setLoading] = useState(false);
 
-  const router = useRouter();
+  async function handleLogout() {
+    setLoading(true);
 
-  function handleLogout() {
+    await supabase.auth.signOut();
 
-    // remove auth
-    localStorage.removeItem("parapixel_auth");
-
-    // redirect to login
-    router.push("/login");
-
-    // force reload to clear state
-    router.refresh();
-
+    // Force full page reload to clear all state
+    window.location.href = "/login";
   }
 
   return (
-
     <Button
       variant="destructive"
-      size="sm"
       onClick={handleLogout}
+      disabled={loading}
+      className="w-full"
     >
-      Logout
+      {loading ? "Logging out..." : "Logout"}
     </Button>
-
   );
-
 }

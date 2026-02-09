@@ -14,9 +14,11 @@ The ParaPixel Admin Dashboard is a comprehensive internal management system buil
 ### 📊 Dashboard Analytics
 
 - Real-time financial overview with revenue, expenses, and profit metrics
-- Monthly and yearly trend visualization
+- Monthly and yearly trend visualization with toggle
+- Last 12 months data display
 - Recent transaction tracking
 - Invoice status monitoring
+- Interactive charts with hover details
 
 ### 👥 Client Management
 
@@ -37,15 +39,20 @@ The ParaPixel Admin Dashboard is a comprehensive internal management system buil
 
 - Payment recording and tracking
 - Multiple payment method support
-- Client and project linkage
+- Client and project linkage with smart dependency
+- Optimized project selection (filtered by client)
 - Historical payment records
+- Payment amount validation
 
 ### 💰 Expense Management
 
 - Expense categorization and tracking
+- Detailed notes with smart collapse (character + line count based)
+- Icon-based expand/collapse controls for better UX
 - Monthly cost analysis
 - Total expense calculations
 - Category-wise breakdowns
+- Scrollable textarea to prevent dialog overflow
 
 ### 📄 Invoice System
 
@@ -57,10 +64,22 @@ The ParaPixel Admin Dashboard is a comprehensive internal management system buil
 
 ### 🔐 Security
 
-- Secure authentication system
-- Environment-based secret management
-- Session token implementation
+- Google OAuth 2.0 authentication
+- Domain-restricted access (@parapixel.net only)
+- Supabase authentication and session management
+- Automatic session refresh and validation
 - Protected routes and API endpoints
+- No password management required
+
+### 🎨 User Experience
+
+- Consistent AlertDialog confirmations for destructive actions
+- Smart data display with collapsible content
+- Icon-based controls for intuitive interaction
+- Accessible components with proper ARIA labels
+- Responsive design optimized for all screen sizes
+- Loading states and skeleton screens
+- Real-time data updates
 
 ## Tech Stack
 
@@ -70,13 +89,16 @@ The ParaPixel Admin Dashboard is a comprehensive internal management system buil
 - **UI Components:** Custom components with shadcn/ui
 - **Styling:** Tailwind CSS
 - **Charts:** Recharts
-- **Authentication:** Custom auth with server-side validation
+- **Icons:** Lucide React
+- **Authentication:** Google OAuth 2.0 via Supabase Auth
+- **Notifications:** Sonner (toast notifications)
 
 ## Prerequisites
 
 - Node.js 18.x or higher
 - npm or yarn
 - Supabase account and project
+- Google Cloud Console account (for OAuth setup)
 
 ## Installation
 
@@ -107,11 +129,21 @@ Update the `.env` file with your credentials:
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
-
-# Authentication
-AUTH_SECRET=your-secure-password
 ```
+
+### 4. Configure Google OAuth
+
+**Important:** You must configure Google OAuth before the authentication will work.
+
+Follow the detailed setup guide: [GOOGLE_AUTH_SETUP.md](GOOGLE_AUTH_SETUP.md)
+
+Quick summary:
+
+1. Create OAuth 2.0 credentials in Google Cloud Console
+2. Configure Google provider in Supabase Dashboard
+3. Add authorized redirect URIs for your domains
+
+### 5
 
 ### 4. Database Setup
 
@@ -165,7 +197,7 @@ create table payments (
 create table expenses (
   id uuid default gen_random_uuid() primary key,
   title text not null,
-  description text,
+  notes text,
   amount numeric not null,
   category text,
   date date,
@@ -183,9 +215,8 @@ create table invoices (
   project_id uuid references projects(id),
   issue_date date,
   due_date date,
-  total numeric not null,
+  amount numeric not null,
   status text,
-  items jsonb,
   created_at timestamp with time zone default now()
 );
 ```
@@ -196,7 +227,7 @@ create table invoices (
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and log in with your configured `AUTH_SECRET`.
+Open [http://localhost:3000](http://localhost:3000) and sign in with your @parapixel.net Google account.
 
 ## Project Structure
 
@@ -207,6 +238,8 @@ Open [http://localhost:3000](http://localhost:3000) and log in with your configu
 ├── src/
 │   ├── app/             # Next.js app directory
 │   │   ├── api/         # API routes
+│   │   │   └── invoice/export/  # Invoice PDF export
+│   │   ├── auth/        # OAuth callback handler
 │   │   ├── clients/     # Client management pages
 │   │   ├── dashboard/   # Dashboard page
 │   │   ├── expenses/    # Expense management pages
@@ -215,31 +248,44 @@ Open [http://localhost:3000](http://localhost:3000) and log in with your configu
 │   │   ├── payments/    # Payment tracking pages
 │   │   └── projects/    # Project management pages
 │   ├── components/      # React components
-│   │   ├── layouts/     # Layout components
-│   │   └── ui/          # UI components
+│   │   ├── clients/     # Client-specific components
+│   │   ├── dashboard/   # Dashboard components
+│   │   ├── expenses/    # Expense management components
+│   │   ├── invoice/     # Invoice components
+│   │   ├── layouts/     # Layout components (Sidebar)
+│   │   ├── payments/    # Payment components
+│   │   ├── projects/    # Project components
+│   │   └── ui/          # Reusable UI components
 │   ├── lib/             # Utility functions
 │   │   ├── auth.ts      # Authentication logic
+│   │   ├── utils.ts     # General utilities
 │   │   └── supabase/    # Supabase client
 │   └── types/           # TypeScript type definitions
 ├── .env.example         # Environment variables template
+├── GOOGLE_AUTH_SETUP.md # OAuth configuration guide
 └── README.md            # This file
 ```
 
-## Usage
+## Authentication
 
-### Accessing the Dashboard
+### First Time Setup
 
 1. Navigate to `/login`
-2. Enter your configured `AUTH_SECRET`
-3. Access the dashboard and all management features
+2. Click "Sign in with Google"
+3. Authenticate with your @parapixel.net Google account
+4. Access the dashboard and all management features
+
+**Note:** Only Google accounts with @parapixel.net email addresses can access the system.
+
+## Usage
 
 ### Managing Data
 
-- **Clients:** Add, edit, and delete client information
+- **Clients:** Add, edit, and delete client information with comprehensive contact details
 - **Projects:** Create projects, track budgets, and monitor payment status
-- **Payments:** Record payments and associate them with clients/projects
-- **Expenses:** Track business expenses by category
-- **Invoices:** Generate invoices, export to PDF, and manage payment status
+- **Payments:** Record payments with client-project dependencies and multiple payment methods
+- **Expenses:** Track business expenses with detailed notes and smart collapse features
+- **Invoices:** Generate invoices, export to PDF, and manage payment status with automatic overdue detection
 
 ## Building for Production
 

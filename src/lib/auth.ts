@@ -1,35 +1,62 @@
-export function isAuthenticated() {
+import { supabase } from "./supabase/client";
+
+export async function isAuthenticated(): Promise<boolean> {
   if (typeof window === "undefined") return false;
 
-  const token = localStorage.getItem("parapixel_auth");
-  return token !== null && token.length > 0;
-}
-
-export async function login(
-  secret: string,
-): Promise<{ success: boolean; error?: string }> {
   try {
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ secret }),
-    });
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-    const data = await response.json();
+    if (!session) return false;
 
-    if (response.ok && data.success) {
-      localStorage.setItem("parapixel_auth", data.token);
-      return { success: true };
+    // Check if email is from @parapixel.net domain
+    const email = session.user.email;
+    if (!email || !email.endsWith("@parapixel.net")) {
+      // Sign out if not from allowed domain
+      await supabase.auth.signOut();
+      return false;
     }
 
-    return { success: false, error: data.error || "Authentication failed" };
+    return true;
   } catch (error) {
-    return { success: false, error: "Network error occurred" };
+    return false;
   }
 }
 
-export function logout() {
-  localStorage.removeItem("parapixel_auth");
+export async function signInWithGoogle(): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/login`,
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
+      },
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Failed to initiate Google sign-in" };
+  }
+}
+
+export async function signOut(): Promise<void> {
+  await supabase.auth.signOut();
+}
+
+export async function getCurrentUser() {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  return session?.user || null;
 }

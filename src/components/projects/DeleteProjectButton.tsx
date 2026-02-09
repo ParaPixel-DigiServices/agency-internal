@@ -27,12 +27,9 @@ export default function DeleteProjectButton({
   project: any;
   onDeleted: () => void;
 }) {
-
   const [loading, setLoading] = useState(false);
 
-
   const deleteProject = async () => {
-
     setLoading(true);
 
     const { error } = await supabase
@@ -43,74 +40,40 @@ export default function DeleteProjectButton({
     setLoading(false);
 
     if (error) {
-
       toast.error(error.message);
 
       return;
-
     }
 
     toast.success("Project deleted");
 
     onDeleted();
-
   };
 
-
   return (
-
     <AlertDialog>
-
       <AlertDialogTrigger asChild>
-
         <Button size="sm" variant="destructive">
-
           <Trash className="w-4 h-4 mr-1" />
-
           Delete
-
         </Button>
-
       </AlertDialogTrigger>
 
-
       <AlertDialogContent>
-
         <AlertDialogHeader>
-
           <AlertDialogTitle>
-
-            Delete project `&quot;{project.name}&quot;`?
-
+            Delete project &quot;{project.name}&quot;?
           </AlertDialogTitle>
-
         </AlertDialogHeader>
 
-
         <div className="flex justify-end gap-2 mt-4">
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
 
-          <AlertDialogCancel>
-
-            Cancel
-
-          </AlertDialogCancel>
-
-
-          <AlertDialogAction
-            onClick={deleteProject}
-            disabled={loading}
-          >
-
+          <AlertDialogAction onClick={deleteProject} disabled={loading}>
             {loading ? "Deleting..." : "Delete"}
-
           </AlertDialogAction>
-
         </div>
-
       </AlertDialogContent>
-
     </AlertDialog>
-
   );
-
 }

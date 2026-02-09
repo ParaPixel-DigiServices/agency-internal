@@ -13,7 +13,7 @@ import {
   Receipt,
   FileText,
 } from "lucide-react";
-import { isAuthenticated } from "@/lib/auth";
+import { supabase } from "@/lib/supabase/client";
 import LogoutButton from "@/components/LogoutButton";
 
 const navItems = [
@@ -51,8 +51,35 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [authenticated, setAuthenticated] = useState(false);
 
-  if (!isAuthenticated()) return null;
+  useEffect(() => {
+    // Check initial auth state
+    const checkAuth = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setAuthenticated(
+        !!session?.user?.email && session.user.email.endsWith("@parapixel.net"),
+      );
+    };
+    checkAuth();
+
+    // Listen to auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setAuthenticated(
+        !!session?.user?.email && session.user.email.endsWith("@parapixel.net"),
+      );
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  if (!authenticated) return null;
 
   return (
     <div className="fixed left-0 top-0 w-64 h-screen border-r bg-background p-4 flex flex-col">

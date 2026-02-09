@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { supabase } from "@/lib/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 import AddExpenseDialog from "@/components/expenses/AddExpenseDialog";
 import EditExpenseDialog from "@/components/expenses/EditExpensesDialog";
@@ -28,6 +29,20 @@ export default function ExpensesPage() {
   const [loading, setLoading] = useState(true);
 
   const [total, setTotal] = useState(0);
+
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
+
+  const toggleNoteExpansion = (expenseId: string) => {
+    setExpandedNotes((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(expenseId)) {
+        newSet.delete(expenseId);
+      } else {
+        newSet.add(expenseId);
+      }
+      return newSet;
+    });
+  };
 
   /* =====================================
      FETCH EXPENSES
@@ -99,7 +114,7 @@ export default function ExpensesPage() {
           <Skeleton className="h-6 w-40 mb-4" />
           <div className="space-y-3">
             <div className="flex gap-4 border-b pb-2">
-              {[...Array(5)].map((_, i) => (
+              {[...Array(7)].map((_, i) => (
                 <Skeleton key={i} className="h-5 w-24" />
               ))}
             </div>
@@ -149,6 +164,8 @@ export default function ExpensesPage() {
 
             <TableHead>Date</TableHead>
 
+            <TableHead>Notes</TableHead>
+
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -156,39 +173,93 @@ export default function ExpensesPage() {
         <TableBody>
           {expenses.length === 0 && (
             <TableRow>
-              <TableCell colSpan={6}>No expenses found</TableCell>
+              <TableCell colSpan={7}>No expenses found</TableCell>
             </TableRow>
           )}
 
-          {expenses.map((expense) => (
-            <TableRow key={expense.id}>
-              <TableCell className="font-medium">{expense.title}</TableCell>
+          {expenses.map((expense) => {
+            const isExpanded = expandedNotes.has(expense.id);
+            const notes = expense.notes || "";
+            const lineCount = notes.split("\n").length;
+            const charCount = notes.length;
 
-              <TableCell>{expense.category || "-"}</TableCell>
+            // Show collapse if more than 50 chars OR more than 2 lines
+            const shouldCollapse = charCount > 50 || lineCount > 2;
 
-              <TableCell>{expense.projects?.name || "-"}</TableCell>
+            // For collapsed view: take first 2 lines or 50 chars, whichever is shorter
+            let truncatedNotes = notes;
+            if (shouldCollapse && !isExpanded) {
+              const firstTwoLines = notes.split("\n").slice(0, 2).join("\n");
+              if (charCount > 50) {
+                truncatedNotes = notes.substring(0, 50);
+              } else {
+                truncatedNotes = firstTwoLines;
+              }
+              if (truncatedNotes !== notes) {
+                truncatedNotes += "...";
+              }
+            }
 
-              <TableCell className="text-red-600 font-semibold">
-                ₹{Number(expense.amount).toLocaleString()}
-              </TableCell>
+            return (
+              <TableRow key={expense.id}>
+                <TableCell className="font-medium">{expense.title}</TableCell>
 
-              <TableCell>{expense.date || "-"}</TableCell>
+                <TableCell>{expense.category || "-"}</TableCell>
 
-              {/* ACTIONS */}
+                <TableCell>{expense.projects?.name || "-"}</TableCell>
 
-              <TableCell className="flex gap-2 justify-end">
-                <EditExpenseDialog
-                  expense={expense}
-                  onUpdated={fetchExpenses}
-                />
+                <TableCell className="text-red-600 font-semibold">
+                  ₹{Number(expense.amount).toLocaleString()}
+                </TableCell>
 
-                <DeleteExpenseButton
-                  expenseId={expense.id}
-                  onDeleted={fetchExpenses}
-                />
-              </TableCell>
-            </TableRow>
-          ))}
+                <TableCell>{expense.date || "-"}</TableCell>
+
+                <TableCell className="max-w-xs">
+                  {notes ? (
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                        {isExpanded ? notes : truncatedNotes}
+                      </p>
+                      {shouldCollapse && (
+                        <button
+                          onClick={() => toggleNoteExpansion(expense.id)}
+                          className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+                        >
+                          {isExpanded ? (
+                            <>
+                              <ChevronUp className="w-3 h-3" />
+                              Collapse
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="w-3 h-3" />
+                              Expand
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">-</span>
+                  )}
+                </TableCell>
+
+                {/* ACTIONS */}
+
+                <TableCell className="flex gap-2 justify-end">
+                  <EditExpenseDialog
+                    expense={expense}
+                    onUpdated={fetchExpenses}
+                  />
+
+                  <DeleteExpenseButton
+                    expense={expense}
+                    onDeleted={fetchExpenses}
+                  />
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>

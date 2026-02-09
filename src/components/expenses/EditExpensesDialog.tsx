@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase/client";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -22,7 +23,6 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { toast } from "sonner";
 
-
 export default function EditExpenseDialog({
   expense,
   onUpdated,
@@ -30,79 +30,52 @@ export default function EditExpenseDialog({
   expense: any;
   onUpdated: () => void;
 }) {
+  const [open, setOpen] = useState(false);
 
-  const [open, setOpen] =
-    useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const [loading, setLoading] =
-    useState(false);
+  const [form, setForm] = useState({
+    title: expense.title || "",
 
-  const [form, setForm] =
-    useState({
+    amount: expense.amount?.toString() || "",
 
-      title: expense.title || "",
+    category: expense.category || "",
 
-      amount:
-        expense.amount?.toString() || "",
+    date: expense.date || new Date().toISOString().split("T")[0],
 
-      category:
-        expense.category || "",
-
-      date:
-        expense.date ||
-        new Date()
-          .toISOString()
-          .split("T")[0],
-
-      notes:
-        expense.notes || "",
-
-    });
-
-
+    notes: expense.notes || "",
+  });
 
   async function updateExpense() {
-
     if (!form.title) {
-
       toast.error("Title required");
 
       return;
-
     }
 
     setLoading(true);
 
-    const { error } =
-      await supabase
-        .from("expenses")
-        .update({
+    const { error } = await supabase
+      .from("expenses")
+      .update({
+        title: form.title,
 
-          title: form.title,
+        amount: Number(form.amount),
 
-          amount:
-            Number(form.amount),
+        category: form.category || null,
 
-          category:
-            form.category || null,
+        date: form.date || null,
 
-          date:
-            form.date || null,
-
-          notes:
-            form.notes || null,
-
-        })
-        .eq("id", expense.id);
+        notes: form.notes || null,
+      })
+      .eq("id", expense.id);
 
     setLoading(false);
 
     if (error) {
-
       toast.error(error.message);
 
       return;
-
     }
 
     toast.success("Expense updated");
@@ -110,52 +83,26 @@ export default function EditExpenseDialog({
     setOpen(false);
 
     onUpdated();
-
   }
 
-
-
   return (
-
-    <Dialog
-      open={open}
-      onOpenChange={setOpen}
-    >
-
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-
-        <Button
-          size="sm"
-          variant="outline"
-        >
-
+        <Button size="sm" variant="outline">
           Edit
-
         </Button>
-
       </DialogTrigger>
 
-
-
       <DialogContent>
-
         <DialogHeader>
-
-          <DialogTitle>
-
-            Edit Expense
-
-          </DialogTitle>
-
+          <DialogTitle>Edit Expense</DialogTitle>
+          <DialogDescription>
+            Update the expense details below.
+          </DialogDescription>
         </DialogHeader>
 
-
-
         <div className="space-y-4">
-
-
           <div>
-
             <Label>Title</Label>
 
             <Input
@@ -163,18 +110,13 @@ export default function EditExpenseDialog({
               onChange={(e) =>
                 setForm({
                   ...form,
-                  title:
-                    e.target.value,
+                  title: e.target.value,
                 })
               }
             />
-
           </div>
 
-
-
           <div>
-
             <Label>Amount</Label>
 
             <Input
@@ -183,18 +125,13 @@ export default function EditExpenseDialog({
               onChange={(e) =>
                 setForm({
                   ...form,
-                  amount:
-                    e.target.value,
+                  amount: e.target.value,
                 })
               }
             />
-
           </div>
 
-
-
           <div>
-
             <Label>Category</Label>
 
             <Input
@@ -202,18 +139,13 @@ export default function EditExpenseDialog({
               onChange={(e) =>
                 setForm({
                   ...form,
-                  category:
-                    e.target.value,
+                  category: e.target.value,
                 })
               }
             />
-
           </div>
 
-
-
           <div>
-
             <Label>Date</Label>
 
             <Input
@@ -222,18 +154,13 @@ export default function EditExpenseDialog({
               onChange={(e) =>
                 setForm({
                   ...form,
-                  date:
-                    e.target.value,
+                  date: e.target.value,
                 })
               }
             />
-
           </div>
 
-
-
           <div>
-
             <Label>Notes</Label>
 
             <Textarea
@@ -241,35 +168,19 @@ export default function EditExpenseDialog({
               onChange={(e) =>
                 setForm({
                   ...form,
-                  notes:
-                    e.target.value,
+                  notes: e.target.value,
                 })
               }
+              className="max-h-32 overflow-y-auto resize-none"
+              rows={4}
             />
-
           </div>
 
-
-
-          <Button
-            onClick={updateExpense}
-            disabled={loading}
-            className="w-full"
-          >
-
-            {loading
-              ? "Updating..."
-              : "Update Expense"}
-
+          <Button onClick={updateExpense} disabled={loading} className="w-full">
+            {loading ? "Updating..." : "Update Expense"}
           </Button>
-
-
         </div>
-
       </DialogContent>
-
     </Dialog>
-
   );
-
 }

@@ -1,65 +1,70 @@
 "use client";
 
+import { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-
+import { Trash } from "lucide-react";
 import { toast } from "sonner";
 
-
 export default function DeleteExpenseButton({
-  expenseId,
+  expense,
   onDeleted,
 }: {
-  expenseId: string;
+  expense: any;
   onDeleted: () => void;
 }) {
+  const [loading, setLoading] = useState(false);
 
-  async function deleteExpense() {
+  const deleteExpense = async () => {
+    setLoading(true);
 
-    if (
-      !confirm(
-        "Delete this expense?"
-      )
-    )
-      return;
+    const { error } = await supabase
+      .from("expenses")
+      .delete()
+      .eq("id", expense.id);
 
-    const { error } =
-      await supabase
-        .from("expenses")
-        .delete()
-        .eq("id", expenseId);
+    setLoading(false);
 
     if (error) {
-
       toast.error(error.message);
-
       return;
-
     }
 
-    toast.success(
-      "Expense deleted"
-    );
-
+    toast.success("Expense deleted");
     onDeleted();
-
-  }
-
-
+  };
 
   return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button size="sm" variant="destructive">
+          <Trash className="w-4 h-4 mr-1" />
+          Delete
+        </Button>
+      </AlertDialogTrigger>
 
-    <Button
-      size="sm"
-      variant="destructive"
-      onClick={deleteExpense}
-    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete expense {expense.title}?</AlertDialogTitle>
+        </AlertDialogHeader>
 
-      Delete
+        <div className="flex justify-end gap-2 mt-4">
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
 
-    </Button>
-
+          <AlertDialogAction onClick={deleteExpense} disabled={loading}>
+            {loading ? "Deleting..." : "Delete"}
+          </AlertDialogAction>
+        </div>
+      </AlertDialogContent>
+    </AlertDialog>
   );
-
 }

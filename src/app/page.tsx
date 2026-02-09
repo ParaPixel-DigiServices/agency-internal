@@ -11,8 +11,6 @@ import {
 
 import { Button } from "@/components/ui/button";
 
-import LogoutButton from "@/components/LogoutButton";
-
 export default function HomePage() {
 
   const sections = [
@@ -80,8 +78,6 @@ export default function HomePage() {
           </p>
 
         </div>
-
-        <LogoutButton />
 
       </div>
 

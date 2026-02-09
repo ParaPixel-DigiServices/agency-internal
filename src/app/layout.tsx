@@ -1,7 +1,24 @@
+"use client";
+
 import "./globals.css";
+import { usePathname } from "next/navigation";
 
 import Sidebar from "@/components/layouts/Sidebar";
 import AuthGuard from "@/components/AuthGuard";
+
+function LayoutContent({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isLoginPage = pathname === "/login";
+
+  return (
+    <div className="flex">
+      <Sidebar />
+      <main className={isLoginPage ? "flex-1" : "flex-1 ml-64"}>
+        {children}
+      </main>
+    </div>
+  );
+}
 
 export default function RootLayout({
   children,
@@ -12,11 +29,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthGuard>
-          <div className="flex">
-            <Sidebar />
-
-            <main className="flex-1 ml-64">{children}</main>
-          </div>
+          <LayoutContent>{children}</LayoutContent>
         </AuthGuard>
       </body>
     </html>
