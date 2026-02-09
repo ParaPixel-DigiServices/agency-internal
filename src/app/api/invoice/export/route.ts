@@ -1,6 +1,6 @@
 export const runtime = "nodejs";
 
-import chromium from "@sparticuz/chromium";
+import chromium from "@sparticuz/chromium-min";
 import puppeteer from "puppeteer-core";
 
 import fs from "fs";
@@ -43,7 +43,6 @@ export async function POST(req: Request) {
       .replaceAll("{{amount}}", invoice.total?.toString() || "0")
       .replaceAll("{{items}}", itemsHTML);
 
-    // CRITICAL FIX FOR VERCEL
     const executablePath = await chromium.executablePath();
 
     const browser = await puppeteer.launch({
@@ -68,20 +67,11 @@ export async function POST(req: Request) {
 
       printBackground: true,
 
-      margin: {
-        top: "0px",
-        bottom: "0px",
-        left: "0px",
-        right: "0px",
-      },
-
     });
 
     await browser.close();
 
     return new NextResponse(Buffer.from(pdf), {
-
-      status: 200,
 
       headers: {
 
@@ -98,10 +88,7 @@ export async function POST(req: Request) {
 
   catch (error) {
 
-    console.error(
-      "PDF generation error:",
-      error
-    );
+    console.error("PDF generation error:", error);
 
     return NextResponse.json({
 
