@@ -1,224 +1,127 @@
 export const runtime = "nodejs";
 
-import puppeteer from "puppeteer";
+import chromium from "@sparticuz/chromium";
+import puppeteer from "puppeteer-core";
+
 import fs from "fs";
 import path from "path";
+
 import { NextResponse } from "next/server";
-
-import { createClient } from "@supabase/supabase-js";
-
-
-// Supabase server client
-
-const supabase =
-  createClient(
-
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-
-  );
-
 
 export async function POST(req: Request) {
 
   try {
 
-    const { invoiceId } =
-      await req.json();
-
-
-
-    // Fetch full invoice with relations
-
-    const { data: invoice, error }
-      = await supabase
-        .from("invoices")
-        .select(`
-          *,
-          clients(*),
-          projects(*),
-          invoice_items(*)
-        `)
-        .eq("id", invoiceId)
-        .single();
-
-
-    if (error || !invoice) {
-
-      throw new Error(
-        "Invoice not found"
-      );
-
-    }
-
-
+    const invoice = await req.json();
 
     // Load template
+    const templatePath = path.join(
+      process.cwd(),
+      "public",
+      "invoice",
+      "template.html"
+    );
 
-    const templatePath =
-      path.join(
-        process.cwd(),
-        "public",
-        "invoice",
-        "template.html"
-      );
+    let html = fs.readFileSync(
+      templatePath,
+      "utf8"
+    );
 
+    // Build items
+    const itemsHTML = `
+      <tr>
+        <td>${invoice.projects?.name || "Service"}</td>
+        <td>1</td>
+        <td>₹${invoice.total}</td>
+        <td>₹${invoice.total}</td>
+      </tr>
+    `;
 
-    let html =
-      fs.readFileSync(
-        templatePath,
-        "utf-8"
-      );
-
-
-
-    // Build items HTML from real invoice_items
-
-    const itemsHTML =
-      invoice.invoice_items
-        ?.map(
-          (item: any) => `
-            <tr>
-              <td>${item.description}</td>
-              <td>${item.quantity}</td>
-              <td>₹${item.unit_price}</td>
-              <td>₹${item.total}</td>
-            </tr>
-          `
-        )
-        .join("")
-      || "";
-
-
-
-    // Replace placeholders
-
+    // Replace variables
     html = html
-
       .replaceAll(
         "{{invoice_number}}",
-        invoice.invoice_number
+        invoice.invoice_number || ""
       )
-
       .replaceAll(
         "{{issue_date}}",
-        new Date(
-          invoice.issue_date
-        ).toLocaleDateString("en-IN")
+        invoice.issue_date || ""
       )
-
       .replaceAll(
         "{{client_name}}",
         invoice.clients?.name || ""
       )
-
       .replaceAll(
         "{{client_address}}",
         invoice.clients?.address || ""
       )
-
       .replaceAll(
         "{{amount}}",
-        invoice.total.toString()
+        invoice.total?.toString() || "0"
       )
-
       .replaceAll(
         "{{items}}",
         itemsHTML
       );
 
+    // Launch chromium (VERCEL SAFE)
+    const browser = await puppeteer.launch({
 
+      args: chromium.args,
 
-    // Launch Puppeteer
+      executablePath:
+        await chromium.executablePath(),
 
-    const browser =
-      await puppeteer.launch({
+      headless: true,
 
-        headless: true,
+      defaultViewport: {
+        width: 1240,
+        height: 1754,
+      },
 
-        args: [
-          "--no-sandbox",
-          "--disable-setuid-sandbox"
-        ],
+    });
 
-      });
-
-
-    const page =
-      await browser.newPage();
-
-
-
-    // Load HTML
+    const page = await browser.newPage();
 
     await page.setContent(
       html,
       {
-        waitUntil:
-          "networkidle0"
+        waitUntil: "networkidle0",
       }
     );
 
+    const pdf = await page.pdf({
 
+      format: "A4",
 
-    // Fix image loading
+      printBackground: true,
 
-    await page.evaluate(() => {
-
-      const base =
-        document.createElement("base");
-
-      base.href =
-        "http://localhost:3000/invoice/";
-
-      document.head.appendChild(base);
+      margin: {
+        top: "0px",
+        bottom: "0px",
+        left: "0px",
+        right: "0px",
+      },
 
     });
 
-
-
-    // Generate PDF
-    await page.evaluateHandle('document.fonts.ready');
-
-    const pdf =
-      await page.pdf({
-
-        width: "210mm",
-        height: "297mm",
-
-        printBackground: true,
-        preferCSSPageSize: true,
-
-      });
-
-
-
     await browser.close();
 
+    return new NextResponse(Buffer.from(pdf), {
 
+      status: 200,
 
-    return new NextResponse(
+      headers: {
 
-      Buffer.from(pdf),
+        "Content-Type":
+          "application/pdf",
 
-      {
+        "Content-Disposition":
+          `attachment; filename=${invoice.invoice_number}.pdf`,
 
-        status: 200,
+      },
 
-        headers: {
-
-          "Content-Type":
-            "application/pdf",
-
-          "Content-Disposition":
-            `attachment; filename=${invoice.invoice_number}.pdf`,
-
-        },
-
-      }
-
-    );
+    });
 
   }
 
@@ -229,18 +132,14 @@ export async function POST(req: Request) {
       error
     );
 
-    return NextResponse.json(
+    return NextResponse.json({
 
-      {
-        error:
-          "Failed to generate PDF",
-      },
+      error:
+        "Failed to generate PDF",
 
-      {
-        status: 500,
-      }
-
-    );
+    }, {
+      status: 500,
+    });
 
   }
 
