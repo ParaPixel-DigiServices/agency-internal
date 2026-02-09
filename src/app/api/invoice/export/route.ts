@@ -24,7 +24,7 @@ export async function POST(req: Request) {
 
     /*
     ===============================
-    FETCH INVOICE
+    FETCH INVOICE + ITEMS
     ===============================
     */
 
@@ -76,33 +76,75 @@ export async function POST(req: Request) {
 
     /*
     ===============================
+    EMBED LOGO + BG (CRITICAL FIX)
+    ===============================
+    */
+
+    const logoPath =
+      path.join(
+        process.cwd(),
+        "public",
+        "invoice",
+        "logo.png"
+      );
+
+    const bgPath =
+      path.join(
+        process.cwd(),
+        "public",
+        "invoice",
+        "bg.png"
+      );
+
+    const logoBase64 =
+      fs.readFileSync(logoPath)
+        .toString("base64");
+
+    const bgBase64 =
+      fs.readFileSync(bgPath)
+        .toString("base64");
+
+    html = html
+      .replace(
+        'src="/invoice/logo.png"',
+        `src="data:image/png;base64,${logoBase64}"`
+      )
+      .replace(
+        "url('/invoice/bg.png')",
+        `url('data:image/png;base64,${bgBase64}')`
+      );
+
+    /*
+    ===============================
     BUILD ITEMS HTML
     ===============================
     */
 
     const itemsHTML =
       invoice.invoice_items
-        .map(
+        ?.map(
           (item: any) => `
-          <tr>
-            <td>${item.description}</td>
-            <td>${item.quantity}</td>
-            <td>₹${item.unit_price}</td>
-            <td>₹${item.total}</td>
-          </tr>
-        `
+            <tr>
+              <td>${item.description}</td>
+              <td>${item.quantity}</td>
+              <td>₹${Number(item.unit_price).toLocaleString("en-IN")}</td>
+              <td>₹${Number(item.total).toLocaleString("en-IN")}</td>
+            </tr>
+          `
         )
-        .join("");
+        .join("") || "";
 
     /*
     ===============================
-    FORMAT DATES
+    FORMAT DATE
     ===============================
     */
 
     const issueDate =
-      new Date(invoice.issue_date)
-        .toLocaleDateString("en-IN");
+      invoice.issue_date
+        ? new Date(invoice.issue_date)
+            .toLocaleDateString("en-IN")
+        : "";
 
     /*
     ===============================
@@ -113,7 +155,7 @@ export async function POST(req: Request) {
     html = html
       .replaceAll(
         "{{invoice_number}}",
-        invoice.invoice_number
+        invoice.invoice_number || ""
       )
       .replaceAll(
         "{{issue_date}}",
@@ -129,7 +171,8 @@ export async function POST(req: Request) {
       )
       .replaceAll(
         "{{amount}}",
-        invoice.total.toString()
+        Number(invoice.total)
+          .toLocaleString("en-IN")
       )
       .replaceAll(
         "{{items}}",
@@ -138,7 +181,7 @@ export async function POST(req: Request) {
 
     /*
     ===============================
-    GENERATE PDF
+    CONNECT TO BROWSERLESS
     ===============================
     */
 
@@ -167,6 +210,13 @@ export async function POST(req: Request) {
 
         printBackground: true,
 
+        margin: {
+          top: "0px",
+          right: "0px",
+          bottom: "0px",
+          left: "0px"
+        }
+
       });
 
     await browser.close();
@@ -177,19 +227,22 @@ export async function POST(req: Request) {
     ===============================
     */
 
-    return new NextResponse(Buffer.from(pdf), {
+    return new NextResponse(
+      Buffer.from(pdf),
+      {
 
-      headers: {
+        headers: {
 
-        "Content-Type":
-          "application/pdf",
+          "Content-Type":
+            "application/pdf",
 
-        "Content-Disposition":
-          `attachment; filename=${invoice.invoice_number}.pdf`,
+          "Content-Disposition":
+            `attachment; filename=${invoice.invoice_number}.pdf`,
 
-      },
+        },
 
-    });
+      }
+    );
 
   }
 
