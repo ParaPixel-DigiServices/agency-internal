@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import AddProjectDialog from "@/components/projects/AddProjectDialog";
 
@@ -106,7 +107,16 @@ export default function ProjectsPage() {
       </div>
 
       {loading ? (
-        <p>Loading...</p>
+        <div className="space-y-3">
+          <div className="flex gap-4 border-b pb-2">
+            {[...Array(7)].map((_, i) => (
+              <Skeleton key={i} className="h-5 w-24" />
+            ))}
+          </div>
+          {[...Array(8)].map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
+        </div>
       ) : (
         <Table>
           <TableHeader>

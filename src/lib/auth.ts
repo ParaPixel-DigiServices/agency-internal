@@ -1,18 +1,33 @@
-export const AUTH_SECRET = "yuckfou";
-
 export function isAuthenticated() {
   if (typeof window === "undefined") return false;
 
-  return localStorage.getItem("parapixel_auth") === AUTH_SECRET;
+  const token = localStorage.getItem("parapixel_auth");
+  return token !== null && token.length > 0;
 }
 
-export function login(secret: string) {
-  if (secret === AUTH_SECRET) {
-    localStorage.setItem("parapixel_auth", AUTH_SECRET);
-    return true;
-  }
+export async function login(
+  secret: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ secret }),
+    });
 
-  return false;
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      localStorage.setItem("parapixel_auth", data.token);
+      return { success: true };
+    }
+
+    return { success: false, error: data.error || "Authentication failed" };
+  } catch (error) {
+    return { success: false, error: "Network error occurred" };
+  }
 }
 
 export function logout() {

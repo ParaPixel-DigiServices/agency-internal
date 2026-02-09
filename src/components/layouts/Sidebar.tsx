@@ -1,8 +1,9 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useEffect, useState } from "react"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import Image from "next/image";
 
 import {
   LayoutDashboard,
@@ -11,8 +12,9 @@ import {
   CreditCard,
   Receipt,
   FileText,
-} from "lucide-react"
-import { isAuthenticated } from "@/lib/auth"
+} from "lucide-react";
+import { isAuthenticated } from "@/lib/auth";
+import LogoutButton from "@/components/LogoutButton";
 
 const navItems = [
   {
@@ -45,30 +47,31 @@ const navItems = [
     href: "/invoices",
     icon: FileText,
   },
-
-]
+];
 
 export default function Sidebar() {
-
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   if (!isAuthenticated()) return null;
-    
 
   return (
-    <div className="w-64 h-screen border-r bg-background p-4">
-
-      <div className="text-xl font-bold mb-8">
-        ParaPixel OS
+    <div className="fixed left-0 top-0 w-64 h-screen border-r bg-background p-4 flex flex-col">
+      <div className="flex items-center gap-3 mb-8">
+        <Image
+          src="/logo.svg"
+          alt="ParaPixel Logo"
+          width={40}
+          height={40}
+          className="rounded invert"
+        />
+        <div className="text-xl font-bold">ParaPixel OS</div>
       </div>
 
-      <nav className="space-y-2">
-
+      <nav className="space-y-2 flex-1 overflow-y-auto">
         {navItems.map((item) => {
+          const Icon = item.icon;
 
-          const Icon = item.icon
-
-          const active = pathname === item.href
+          const active = pathname === item.href;
 
           return (
             <Link
@@ -80,17 +83,17 @@ export default function Sidebar() {
                 ${active ? "bg-muted font-medium" : ""}
               `}
             >
-
               <Icon size={18} />
 
               {item.name}
-
             </Link>
-          )
+          );
         })}
-
       </nav>
 
+      <div className="mt-4 pt-4 border-t">
+        <LogoutButton />
+      </div>
     </div>
-  )
+  );
 }

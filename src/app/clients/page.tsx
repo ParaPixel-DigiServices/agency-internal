@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { Client } from "@/types/client";
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import AddClientDialog from "@/components/clients/AddClientDialog";
 
@@ -48,7 +49,16 @@ export default function ClientsPage() {
       </div>
 
       {loading ? (
-        <p>Loading...</p>
+        <div className="space-y-3">
+          <div className="flex gap-4 border-b pb-2">
+            {[...Array(6)].map((_, i) => (
+              <Skeleton key={i} className="h-5 w-24" />
+            ))}
+          </div>
+          {[...Array(8)].map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
+        </div>
       ) : (
         <Table>
           <TableHeader>
