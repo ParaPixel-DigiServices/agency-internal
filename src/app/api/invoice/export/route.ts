@@ -199,7 +199,8 @@ export async function POST(req: Request) {
     await page.setContent(
       html,
       {
-        waitUntil: "networkidle0"
+        waitUntil: "domcontentloaded",
+        timeout: 0
       }
     );
 
