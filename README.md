@@ -57,10 +57,12 @@ The ParaPixel Admin Dashboard is a comprehensive internal management system buil
 ### 📄 Invoice System
 
 - Professional invoice generation
-- PDF export functionality
+- PDF export functionality powered by Browserless + Puppeteer
+- High-quality PDF rendering with custom templates
 - Status management (Draft, Sent, Paid, Overdue, Cancelled)
 - Automatic overdue detection
 - Invoice template customization
+- Bulk export capabilities
 
 ### 🔐 Security
 
@@ -92,6 +94,7 @@ The ParaPixel Admin Dashboard is a comprehensive internal management system buil
 - **Icons:** Lucide React
 - **Authentication:** Google OAuth 2.0 via Supabase Auth
 - **Notifications:** Sonner (toast notifications)
+- **PDF Export:** Puppeteer + Browserless (headless Chrome)
 
 ## Prerequisites
 
@@ -99,6 +102,7 @@ The ParaPixel Admin Dashboard is a comprehensive internal management system buil
 - npm or yarn
 - Supabase account and project
 - Google Cloud Console account (for OAuth setup)
+- Browserless account (for Invoice PDF export) - [Get free account](https://www.browserless.io/)
 
 ## Installation
 
@@ -129,7 +133,14 @@ Update the `.env` file with your credentials:
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+
+# Browserless Configuration (for Invoice PDF Export)
+# Get WebSocket endpoint from: https://www.browserless.io/
+BROWSERLESS_URL=wss://production-sfo.browserless.io?token=your-browserless-token
 ```
+
+**Note:** The `BROWSERLESS_URL` is required for Invoice PDF export functionality. Sign up at [browserless.io](https://www.browserless.io/) to get your WebSocket endpoint with API token.
 
 ### 4. Configure Google OAuth
 
@@ -302,8 +313,14 @@ The application can be deployed on [Vercel](https://vercel.com), [Netlify](https
 
 1. Push your code to GitHub
 2. Import the project in Vercel
-3. Configure environment variables in Vercel dashboard
+3. Configure environment variables in Vercel dashboard:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `BROWSERLESS_URL` (required for invoice PDF export)
 4. Deploy
+
+**Note:** The `vercel.json` configuration file is included to set a 60-second timeout for the invoice PDF export API route, as PDF generation may take longer than the default 10-second limit.
 
 ## Contributing
 
