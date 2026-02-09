@@ -1,30 +1,38 @@
-import "./globals.css"
+import "./globals.css";
 
-import Sidebar from "@/components/layouts/Sidebar"
+import Sidebar from "@/components/layouts/Sidebar";
+import AuthGuard from "@/components/AuthGuard";
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
 
   return (
+
     <html lang="en">
 
       <body>
 
-        <div className="flex">
+        <AuthGuard>
 
-          <Sidebar />
+          <div className="flex">
 
-          <main className="flex-1">
-            {children}
-          </main>
+            <Sidebar />
 
-        </div>
+            <main className="flex-1">
+              {children}
+            </main>
+
+          </div>
+
+        </AuthGuard>
 
       </body>
 
     </html>
-  )
+
+  );
+
 }

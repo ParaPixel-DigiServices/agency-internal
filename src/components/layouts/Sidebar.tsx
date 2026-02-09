@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
 
 import {
   LayoutDashboard,
@@ -11,6 +12,7 @@ import {
   Receipt,
   FileText,
 } from "lucide-react"
+import { isAuthenticated } from "@/lib/auth"
 
 const navItems = [
   {
@@ -47,8 +49,17 @@ const navItems = [
 ]
 
 export default function Sidebar() {
-
   const pathname = usePathname()
+  const [isAuth, setIsAuth] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+    setIsAuth(isAuthenticated())
+  }, [])
+
+  // Return null during SSR and until mounted to avoid hydration mismatch
+  if (!isMounted || !isAuth) return null
 
   return (
     <div className="w-64 h-screen border-r bg-background p-4">

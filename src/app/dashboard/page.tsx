@@ -19,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import LogoutButton from "@/components/LogoutButton"
 
 export default function DashboardPage() {
 
@@ -279,6 +280,8 @@ export default function DashboardPage() {
       <h1 className="text-3xl font-bold">
         Dashboard
       </h1>
+
+      <LogoutButton />
 
 
       {/* MAIN STATS */}
