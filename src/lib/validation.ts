@@ -27,14 +27,21 @@ export const ClientSchema = z.object({
 
 export const ProjectSchema = z.object({
   name: z.string().min(1, "Project name is required").max(200, "Name too long"),
-  client_id: z.string().uuid("Invalid client ID").optional().or(z.literal("")),
+  client_id: z
+    .string()
+    .uuid("Please select a valid client")
+    .min(1, "Client is required"),
   budget: z
     .number()
     .nonnegative("Budget must be positive")
     .finite()
     .optional()
     .or(z.literal(0)),
-  deadline: z.string().optional().or(z.literal("")),
+  description: z
+    .string()
+    .max(1000, "Description too long")
+    .optional()
+    .or(z.literal("")),
   status: z.string().max(50).optional().or(z.literal("")),
 });
 

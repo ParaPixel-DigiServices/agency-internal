@@ -39,7 +39,7 @@ export default function RootLayout({
             <LayoutContent>{children}</LayoutContent>
           </SessionMonitor>
         </AuthGuard>
-        <Toaster position="top-right" richColors />
+        <Toaster position="top-right" richColors closeButton />
       </body>
     </html>
   );

@@ -14,7 +14,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { ProjectSchema } from "@/lib/validation";
+import { formatDatabaseError } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface Client {
@@ -35,7 +37,7 @@ export default function AddProjectDialog({
     name: "",
     client_id: "",
     budget: "",
-    deadline: "",
+    description: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -51,7 +53,9 @@ export default function AddProjectDialog({
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
   ) => {
     setForm({
       ...form,
@@ -65,7 +69,7 @@ export default function AddProjectDialog({
       name: form.name,
       client_id: form.client_id,
       budget: form.budget ? Number(form.budget) : 0,
-      deadline: form.deadline,
+      description: form.description,
     });
 
     if (!result.success) {
@@ -79,9 +83,9 @@ export default function AddProjectDialog({
     const { error } = await supabase.from("projects").insert([
       {
         name: form.name,
-        client_id: form.client_id,
+        client_id: form.client_id || null,
         budget: form.budget ? Number(form.budget) : null,
-        deadline: form.deadline || null,
+        description: form.description || null,
       },
     ]);
 
@@ -92,14 +96,14 @@ export default function AddProjectDialog({
         name: "",
         client_id: "",
         budget: "",
-        deadline: "",
+        description: "",
       });
 
       toast.success("Project created");
       setOpen(false);
       onProjectAdded();
     } else {
-      toast.error(error.message);
+      toast.error(formatDatabaseError(error));
     }
   };
 
@@ -150,12 +154,12 @@ export default function AddProjectDialog({
           </div>
 
           <div>
-            <Label>Deadline</Label>
-            <Input
-              name="deadline"
-              type="date"
-              value={form.deadline}
+            <Label>Description</Label>
+            <Textarea
+              name="description"
+              value={form.description}
               onChange={handleChange}
+              placeholder="Project description..."
             />
           </div>
 

@@ -23,7 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Pencil } from "lucide-react";
 
 import { ProjectSchema } from "@/lib/validation";
-
+import { formatDatabaseError } from "@/lib/utils";
 import { toast } from "sonner";
 
 export default function EditProjectDialog({
@@ -41,7 +41,6 @@ export default function EditProjectDialog({
     name: project.name || "",
     budget: project.budget || "",
     status: project.status || "Planning",
-    deadline: project.deadline || "",
     description: project.description || "",
   });
 
@@ -58,8 +57,9 @@ export default function EditProjectDialog({
     // Validate input
     const result = ProjectSchema.safeParse({
       name: form.name,
+      client_id: project.client_id,
       budget: form.budget ? Number(form.budget) : 0,
-      deadline: form.deadline,
+      description: form.description,
       status: form.status,
     });
 
@@ -82,7 +82,7 @@ export default function EditProjectDialog({
     setLoading(false);
 
     if (error) {
-      toast.error(error.message);
+      toast.error(formatDatabaseError(error));
       return;
     }
 
@@ -120,17 +120,6 @@ export default function EditProjectDialog({
               name="budget"
               type="number"
               value={form.budget}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div>
-            <Label>Deadline</Label>
-
-            <Input
-              name="deadline"
-              type="date"
-              value={form.deadline}
               onChange={handleChange}
             />
           </div>

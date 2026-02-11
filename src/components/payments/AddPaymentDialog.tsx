@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PaymentSchema } from "@/lib/validation";
+import { formatDatabaseError } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface Client {
@@ -118,7 +119,7 @@ export default function AddPaymentDialog({
     const { error } = await supabase.from("payments").insert([
       {
         client_id: form.client_id,
-        project_id: form.project_id,
+        project_id: form.project_id || null,
         amount: Number(form.amount),
         method: form.method,
       },
@@ -138,7 +139,7 @@ export default function AddPaymentDialog({
       setOpen(false);
       onPaymentAdded();
     } else {
-      toast.error(error.message);
+      toast.error(formatDatabaseError(error));
     }
   };
 

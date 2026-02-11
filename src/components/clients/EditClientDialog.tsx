@@ -23,7 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Pencil } from "lucide-react";
 
 import { ClientSchema } from "@/lib/validation";
-
+import { formatDatabaseError } from "@/lib/utils";
 import { toast } from "sonner";
 
 export default function EditClientDialog({
@@ -79,7 +79,7 @@ export default function EditClientDialog({
     setLoading(false);
 
     if (error) {
-      toast.error(error.message);
+      toast.error(formatDatabaseError(error));
       return;
     }
 

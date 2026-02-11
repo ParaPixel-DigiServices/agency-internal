@@ -85,7 +85,7 @@ function LoginContent() {
           />
           <h1 className="text-2xl font-bold text-center">ParaPixel Internal</h1>
           <p className="text-sm text-muted-foreground text-center">
-            Sign in with your @parapixel.net Google account
+            Sign in with your @parapixel.net account
           </p>
         </CardHeader>
 

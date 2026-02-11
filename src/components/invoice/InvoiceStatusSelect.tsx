@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/select";
 
 import { supabase } from "@/lib/supabase/client";
+import { formatDatabaseError } from "@/lib/utils";
 
 import { Invoice } from "@/types/invoice";
 
@@ -39,7 +40,7 @@ export default function InvoiceStatusSelect({
           console.error(error);
         }
 
-        toast.error("Failed to update invoice status");
+        toast.error(formatDatabaseError(error));
 
         return;
       }

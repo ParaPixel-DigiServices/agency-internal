@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 import AddProjectDialog from "@/components/projects/AddProjectDialog";
 
@@ -23,6 +24,21 @@ import EditProjectDialog from "@/components/projects/EditProjectDialog";
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(
+    new Set(),
+  );
+
+  const toggleDescriptionExpansion = (projectId: string) => {
+    setExpandedDescriptions((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(projectId)) {
+        newSet.delete(projectId);
+      } else {
+        newSet.add(projectId);
+      }
+      return newSet;
+    });
+  };
 
   const fetchProjects = async () => {
     setLoading(true);
@@ -131,38 +147,64 @@ export default function ProjectsPage() {
               <TableHead>Paid</TableHead>
               <TableHead>Outstanding</TableHead>
               <TableHead>Payment Status</TableHead>
-              <TableHead>Deadline</TableHead>
+              <TableHead>Description</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
 
           <TableBody>
-            {projects.map((project) => (
-              <TableRow key={project.id}>
-                <TableCell>
-                  <a
-                    href={`/projects/${project.id}`}
-                    className="text-blue-600 hover:underline"
-                  >
-                    {project.name}
-                  </a>
-                </TableCell>
+            {projects.map((project) => {
+              const isExpanded = expandedDescriptions.has(project.id);
+              const description = project.description || "";
+              const lineCount = description.split("\n").length;
+              const charCount = description.length;
 
-                <TableCell>{project.clients?.name}</TableCell>
+              // Show collapse if more than 50 chars OR more than 2 lines
+              const shouldCollapse = charCount > 50 || lineCount > 2;
 
-                <TableCell>₹{project.budget || 0}</TableCell>
+              // For collapsed view: take first 2 lines or 50 chars, whichever is shorter
+              let truncatedDescription = description;
+              if (shouldCollapse && !isExpanded) {
+                const firstTwoLines = description
+                  .split("\n")
+                  .slice(0, 2)
+                  .join("\n");
+                if (charCount > 50) {
+                  truncatedDescription = description.substring(0, 50);
+                } else {
+                  truncatedDescription = firstTwoLines;
+                }
+                if (truncatedDescription !== description) {
+                  truncatedDescription += "...";
+                }
+              }
 
-                <TableCell className="text-green-600 font-medium">
-                  ₹{project.total_paid || 0}
-                </TableCell>
+              return (
+                <TableRow key={project.id}>
+                  <TableCell>
+                    <a
+                      href={`/projects/${project.id}`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      {project.name}
+                    </a>
+                  </TableCell>
 
-                <TableCell className="text-red-600 font-medium">
-                  ₹{project.outstanding || 0}
-                </TableCell>
+                  <TableCell>{project.clients?.name}</TableCell>
 
-                <TableCell>
-                  <span
-                    className={`
+                  <TableCell>₹{project.budget || 0}</TableCell>
+
+                  <TableCell className="text-green-600 font-medium">
+                    ₹{project.total_paid || 0}
+                  </TableCell>
+
+                  <TableCell className="text-red-600 font-medium">
+                    ₹{project.outstanding || 0}
+                  </TableCell>
+
+                  <TableCell>
+                    <span
+                      className={`
       px-2 py-1 rounded text-sm font-medium
       ${
         project.payment_status === "Paid"
@@ -172,24 +214,56 @@ export default function ProjectsPage() {
             : "bg-red-100 text-red-700"
       }
     `}
-                  >
-                    {project.payment_status}
-                  </span>
-                </TableCell>
+                    >
+                      {project.payment_status}
+                    </span>
+                  </TableCell>
 
-                <TableCell>{project.deadline || "-"}</TableCell>
-                <TableCell>
-                  <DeleteProjectButton
-                    project={project}
-                    onDeleted={fetchProjects}
-                  />
-                  <EditProjectDialog
-                    project={project}
-                    onUpdated={fetchProjects}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
+                  <TableCell className="max-w-xs">
+                    {description ? (
+                      <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          {isExpanded ? description : truncatedDescription}
+                        </p>
+                        {shouldCollapse && (
+                          <button
+                            onClick={() =>
+                              toggleDescriptionExpansion(project.id)
+                            }
+                            className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+                          >
+                            {isExpanded ? (
+                              <>
+                                <ChevronUp className="w-3 h-3" />
+                                Collapse
+                              </>
+                            ) : (
+                              <>
+                                <ChevronDown className="w-3 h-3" />
+                                Expand
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
+
+                  <TableCell>
+                    <DeleteProjectButton
+                      project={project}
+                      onDeleted={fetchProjects}
+                    />
+                    <EditProjectDialog
+                      project={project}
+                      onUpdated={fetchProjects}
+                    />
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       )}

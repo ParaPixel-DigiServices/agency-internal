@@ -24,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 import { ExpenseSchema } from "@/lib/validation";
+import { formatDatabaseError } from "@/lib/utils";
 
 export default function EditExpenseDialog({
   expense,
@@ -84,7 +85,7 @@ export default function EditExpenseDialog({
     setLoading(false);
 
     if (error) {
-      toast.error(error.message);
+      toast.error(formatDatabaseError(error));
 
       return;
     }

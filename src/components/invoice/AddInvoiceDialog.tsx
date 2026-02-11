@@ -28,6 +28,7 @@ import {
 import { Label } from "@/components/ui/label";
 
 import { InvoiceSchema, InvoiceItemSchema } from "@/lib/validation";
+import { formatDatabaseError } from "@/lib/utils";
 
 import { toast } from "sonner";
 
@@ -152,7 +153,7 @@ export default function AddInvoiceDialog({ onAdded }: { onAdded: () => void }) {
 
         client_id: clientId,
 
-        project_id: projectId,
+        project_id: projectId || null,
 
         amount: total,
 
@@ -168,7 +169,7 @@ export default function AddInvoiceDialog({ onAdded }: { onAdded: () => void }) {
       .single();
 
     if (error) {
-      toast.error(error.message);
+      toast.error(formatDatabaseError(error));
       return;
     }
 

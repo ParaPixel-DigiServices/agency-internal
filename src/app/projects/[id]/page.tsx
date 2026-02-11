@@ -175,7 +175,7 @@ export default function ProjectProfilePage() {
 
       {/* PROJECT INFO */}
 
-      <div className="grid md:grid-cols-4 gap-6">
+      <div className="grid md:grid-cols-3 gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Client</CardTitle>
@@ -196,14 +196,21 @@ export default function ProjectProfilePage() {
           </CardHeader>
           <CardContent>{project.status}</CardContent>
         </Card>
+      </div>
 
+      {/* DESCRIPTION */}
+      {project.description && (
         <Card>
           <CardHeader>
-            <CardTitle>Deadline</CardTitle>
+            <CardTitle>Description</CardTitle>
           </CardHeader>
-          <CardContent>{project.deadline || "-"}</CardContent>
+          <CardContent>
+            <p className="text-gray-700 whitespace-pre-wrap">
+              {project.description}
+            </p>
+          </CardContent>
         </Card>
-      </div>
+      )}
 
       {/* FINANCIAL SUMMARY */}
 

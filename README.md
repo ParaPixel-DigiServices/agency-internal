@@ -280,7 +280,7 @@ This sets explicit search_path on trigger functions to prevent search_path injec
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and sign in with your @parapixel.net Google account.
+Open [http://localhost:3000](http://localhost:3000) and sign in with your @parapixel.net account.
 
 ## Project Structure
 
@@ -325,10 +325,10 @@ Open [http://localhost:3000](http://localhost:3000) and sign in with your @parap
 
 1. Navigate to `/login`
 2. Click "Sign in with Google"
-3. Authenticate with your @parapixel.net Google account
+3. Authenticate with your @parapixel.net account
 4. Access the dashboard and all management features
 
-**Note:** Only Google accounts with @parapixel.net email addresses can access the system.
+**Note:** Only accounts with @parapixel.net email addresses can access the system.
 
 ## Usage
 
