@@ -70,6 +70,11 @@ The ParaPixel Admin Dashboard is a comprehensive internal management system buil
 - Domain-restricted access (@parapixel.net only)
 - Supabase authentication and session management
 - Automatic session refresh and validation
+- **Row-Level Security (RLS)** policies on all database tables
+- **Security Headers**: HSTS, X-Frame-Options, X-Content-Type-Options, CSP-like policies
+- **Input Validation**: Zod schemas for all forms with client-side validation
+- **Rate Limiting**: API endpoint throttling (5 PDF exports per minute, 10 API requests per minute)
+- **Session Timeout**: Auto-logout after inactivity (2 min dev, 8 hours production)
 - Protected routes and API endpoints with Bearer token authentication
 - Session-based authorization on all API routes
 - No password management required
@@ -97,12 +102,15 @@ The ParaPixel Admin Dashboard is a comprehensive internal management system buil
 - **Authentication:** Google OAuth 2.0 via Supabase Auth
 - **Notifications:** Sonner (toast notifications)
 - **PDF Export:** Puppeteer + Browserless (headless Chrome)
+- **Validation:** Zod for schema-based input validation
+- **Rate Limiting:** @upstash/ratelimit with Redis
 
 ## Prerequisites
 
 - Node.js 18.x or higher
 - npm or yarn
 - Supabase account and project
+- Upstash Redis account (for rate limiting) - [Get free account](https://upstash.com/)
 - Google Cloud Console account (for OAuth setup)
 - Browserless account (for Invoice PDF export) - [Get free account](https://www.browserless.io/)
 
@@ -139,9 +147,16 @@ SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 
 # Browserless Configuration (for Invoice PDF Export)
 # Get WebSocket endpoint from: https://www.browserless.io/
-BROWSERLESS_URL=wss://production-sfo.browserless.io?token=your-browserless-token
+
+# Upstash Redis Configuration (for Rate Limiting)
+# Get from: https://console.upstash.com/
+UPSTASH_REDIS_REST_URL=your-upstash-redis-url
+UPSTASH_REDIS_REST_TOKEN=your-upstash-redis-token
 ```
 
+**Note:** The `BROWSERLESS_URL` is required for Invoice PDF export functionality. Sign up at [browserless.io](https://www.browserless.io/) to get your WebSocket endpoint with API token.
+
+**Note:** The Upstash Redis credentials are required for rate limiting functionality. Sign up at [upstash.com](https://upstash.com/) for free Redis database
 **Note:** The `BROWSERLESS_URL` is required for Invoice PDF export functionality. Sign up at [browserless.io](https://www.browserless.io/) to get your WebSocket endpoint with API token.
 
 ### 4. Configure Google OAuth
@@ -155,8 +170,6 @@ Quick summary:
 1. Create OAuth 2.0 credentials in Google Cloud Console
 2. Configure Google provider in Supabase Dashboard
 3. Add authorized redirect URIs for your domains
-
-### 5
 
 ### 4. Database Setup
 
@@ -220,25 +233,51 @@ create table expenses (
 
 #### Invoices Table
 
-```sql
+````sql
 create table invoices (
   id uuid default gen_random_uuid() primary key,
   invoice_number text not null unique,
-  client_id uuid references clients(id),
-  project_id uuid references projects(id),
-  issue_date date,
-  due_date date,
-  amount numeric not null,
-  status text,
-  created_at timestamp with time zone default now()
+  c
+
+#### Row-Level Security (RLS) Setup
+
+⚠️ **CRITICAL SECURITY STEP**: Run the RLS policies to secure your database.
+
+The project includes a comprehensive RLS policy file that restricts database access to authenticated @parapixel.net users only. To apply these policies:
+
+1. Navigate to your Supabase project dashboard
+2. Go to **SQL Editor**
+3. Open the file `supabase-rls-policies.sql` from the project root
+4. Copy all SQL content and paste into the SQL Editor
+5. Click **Run** to execute all policies
+
+This will:
+- Enable Row Level Security on all tables (clients, projects, payments, expenses, invoices, invoice_items)
+- Create SELECT, INSERT, UPDATE, DELETE policies for each table
+- Restrict all operations to authenticated users with @parapixel.net email domain
+- Prevent unauthorized access even if API keys are compromised
+
+**Verification**: After running the policies, test by querying any table:
+```sql
+SELECT * FROM clients;
+````
+
+If not authenticated, this should return 0 rows.lient_id uuid references clients(id),
+project_id uuid references projects(id),
+issue_date date,
+due_date date,
+amount numeric not null,
+status text,
+created_at timestamp with time zone default now()
 );
-```
+
+````
 
 ### 5. Run the Development Server
 
 ```bash
 npm run dev
-```
+````
 
 Open [http://localhost:3000](http://localhost:3000) and sign in with your @parapixel.net Google account.
 
@@ -311,16 +350,30 @@ npm start
 
 The application can be deployed on [Vercel](https://vercel.com), [Netlify](https://netlify.com), or any platform supporting Next.js applications.
 
-### Vercel Deployment
+5. **API Security**: All API routes are protected with Bearer token authentication and rate limiting. Only authenticated users with @parapixel.net email addresses can access API endpoints. Rate limits:
+   - PDF Export: 5 requests per minute per user
+   - General API: 10 requests per minute per user
 
-1. Push your code to GitHub
-2. Import the project in Vercel
-3. Configure environment variables in Vercel dashboard:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `BROWSERLESS_URL` (required for invoice PDF export)
-4. Deploy
+6. **Session Timeout**: Sessions automatically expire after:
+   - **Development**: 2 minutes (for easy testing)
+   - **Production**: 8 hours
+
+   Users receive a warning 30 seconds before expiration and are logged out automatically. The session timer resets on user activity (mouse, keyboard, touch).
+
+7. **Input Validation**: All form inputs are validated using Zod schemas. This prevents:
+   - SQL injection attempts
+   - XSS attacks via malicious input
+   - Data integrity issues
+   - Invalid data types
+
+8. Push your code to GitHub
+9. Import the project in Vercel
+10. Configure environment variables in Vercel dashboard:
+    - `NEXT_PUBLIC_SUPABASE_URL`
+    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+    - `SUPABASE_SERVICE_ROLE_KEY`
+    - `BROWSERLESS_URL` (required for invoice PDF export)
+11. Deploy
 
 **Note:** The `vercel.json` configuration file is included to set a 60-second timeout for the invoice PDF export API route, as PDF generation may take longer than the default 10-second limit.
 

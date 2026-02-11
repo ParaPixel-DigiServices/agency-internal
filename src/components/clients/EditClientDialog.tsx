@@ -22,6 +22,10 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { Pencil } from "lucide-react";
 
+import { ClientSchema } from "@/lib/validation";
+
+import { toast } from "sonner";
+
 export default function EditClientDialog({
   client,
   onUpdated,
@@ -29,7 +33,6 @@ export default function EditClientDialog({
   client: any;
   onUpdated: () => void;
 }) {
-
   const [open, setOpen] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -42,22 +45,29 @@ export default function EditClientDialog({
     address: client.address || "",
   });
 
-
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
-
     setForm({
       ...form,
       [e.target.name]: e.target.value,
     });
-
   };
 
-
   const updateClient = async () => {
+    // Validate input
+    const result = ClientSchema.safeParse({
+      name: form.name,
+      company: form.company,
+      email: form.email,
+      phone: form.phone,
+    });
 
-    if (!form.name.trim()) return;
+    if (!result.success) {
+      const errors = result.error.issues.map((e) => e.message).join(", ");
+      toast.error(errors);
+      return;
+    }
 
     setLoading(true);
 
@@ -69,61 +79,39 @@ export default function EditClientDialog({
     setLoading(false);
 
     if (error) {
-      alert(error.message);
+      toast.error(error.message);
       return;
     }
+
+    toast.success("Client updated");
 
     setOpen(false);
 
     onUpdated();
-
   };
 
-
   return (
-
     <Dialog open={open} onOpenChange={setOpen}>
-
       <DialogTrigger asChild>
-
         <Button size="sm" variant="outline">
-
           <Pencil className="w-4 h-4 mr-1" />
-
           Edit
-
         </Button>
-
       </DialogTrigger>
 
-
       <DialogContent>
-
         <DialogHeader>
-
           <DialogTitle>Edit Client</DialogTitle>
-
         </DialogHeader>
 
-
         <div className="space-y-4">
-
-
           <div>
-
             <Label>Name</Label>
 
-            <Input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-            />
-
+            <Input name="name" value={form.name} onChange={handleChange} />
           </div>
 
-
           <div>
-
             <Label>Company</Label>
 
             <Input
@@ -131,38 +119,21 @@ export default function EditClientDialog({
               value={form.company}
               onChange={handleChange}
             />
-
           </div>
 
-
           <div>
-
             <Label>Email</Label>
 
-            <Input
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-            />
-
+            <Input name="email" value={form.email} onChange={handleChange} />
           </div>
 
-
           <div>
-
             <Label>Phone</Label>
 
-            <Input
-              name="phone"
-              value={form.phone}
-              onChange={handleChange}
-            />
-
+            <Input name="phone" value={form.phone} onChange={handleChange} />
           </div>
 
-
           <div>
-
             <Label>Address</Label>
 
             <Textarea
@@ -170,27 +141,13 @@ export default function EditClientDialog({
               value={form.address}
               onChange={handleChange}
             />
-
           </div>
 
-
-          <Button
-            onClick={updateClient}
-            disabled={loading}
-            className="w-full"
-          >
-
+          <Button onClick={updateClient} disabled={loading} className="w-full">
             {loading ? "Updating..." : "Update Client"}
-
           </Button>
-
-
         </div>
-
       </DialogContent>
-
     </Dialog>
-
   );
-
 }

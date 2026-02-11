@@ -6,6 +6,7 @@ import puppeteer from "puppeteer-core";
 import type { Browser, Page } from "puppeteer-core";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { pdfExportLimiter } from "@/lib/ratelimit";
 
 /*
 ================================
@@ -69,6 +70,37 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "Unauthorized - Access restricted to @parapixel.net users" },
         { status: 403 },
+      );
+    }
+
+    /*
+    =================================
+    RATE LIMITING CHECK
+    =================================
+    */
+
+    const identifier = user.email;
+    const { success, limit, remaining, reset } =
+      await pdfExportLimiter.limit(identifier);
+
+    if (!success) {
+      const retryAfter = Math.ceil((reset - Date.now()) / 1000);
+      return NextResponse.json(
+        {
+          error: "Rate limit exceeded. Too many PDF exports.",
+          retryAfter,
+          limit,
+          remaining: 0,
+        },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": limit.toString(),
+            "X-RateLimit-Remaining": remaining.toString(),
+            "X-RateLimit-Reset": reset.toString(),
+            "Retry-After": retryAfter.toString(),
+          },
+        },
       );
     }
 

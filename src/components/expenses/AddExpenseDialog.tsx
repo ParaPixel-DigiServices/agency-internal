@@ -31,6 +31,8 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { toast } from "sonner";
 
+import { ExpenseSchema } from "@/lib/validation";
+
 export default function AddExpenseDialog({
   projectId,
   onAdded,
@@ -84,15 +86,18 @@ export default function AddExpenseDialog({
   =============================== */
 
   async function createExpense() {
-    if (!form.title) {
-      toast.error("Title required");
+    // Validate input
+    const result = ExpenseSchema.safeParse({
+      title: form.title,
+      amount: Number(form.amount),
+      category: form.category,
+      date: form.date,
+      notes: form.notes,
+    });
 
-      return;
-    }
-
-    if (!form.amount || Number(form.amount) <= 0) {
-      toast.error("Invalid amount");
-
+    if (!result.success) {
+      const errors = result.error.issues.map((e) => e.message).join(", ");
+      toast.error(errors);
       return;
     }
 

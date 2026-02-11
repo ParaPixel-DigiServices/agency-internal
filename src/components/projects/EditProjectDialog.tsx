@@ -22,6 +22,10 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { Pencil } from "lucide-react";
 
+import { ProjectSchema } from "@/lib/validation";
+
+import { toast } from "sonner";
+
 export default function EditProjectDialog({
   project,
   onUpdated,
@@ -29,7 +33,6 @@ export default function EditProjectDialog({
   project: any;
   onUpdated: () => void;
 }) {
-
   const [open, setOpen] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -42,22 +45,29 @@ export default function EditProjectDialog({
     description: project.description || "",
   });
 
-
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
-
     setForm({
       ...form,
       [e.target.name]: e.target.value,
     });
-
   };
 
-
   const updateProject = async () => {
+    // Validate input
+    const result = ProjectSchema.safeParse({
+      name: form.name,
+      budget: form.budget ? Number(form.budget) : 0,
+      deadline: form.deadline,
+      status: form.status,
+    });
 
-    if (!form.name.trim()) return;
+    if (!result.success) {
+      const errors = result.error.issues.map((e) => e.message).join(", ");
+      toast.error(errors);
+      return;
+    }
 
     setLoading(true);
 
@@ -72,61 +82,38 @@ export default function EditProjectDialog({
     setLoading(false);
 
     if (error) {
-      alert(error.message);
+      toast.error(error.message);
       return;
     }
 
+    toast.success("Project updated");
     setOpen(false);
 
     onUpdated();
-
   };
 
-
   return (
-
     <Dialog open={open} onOpenChange={setOpen}>
-
       <DialogTrigger asChild>
-
         <Button size="sm" variant="outline">
-
           <Pencil className="w-4 h-4 mr-1" />
-
           Edit
-
         </Button>
-
       </DialogTrigger>
 
-
       <DialogContent>
-
         <DialogHeader>
-
           <DialogTitle>Edit Project</DialogTitle>
-
         </DialogHeader>
 
-
         <div className="space-y-4">
-
-
           <div>
-
             <Label>Name</Label>
 
-            <Input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-            />
-
+            <Input name="name" value={form.name} onChange={handleChange} />
           </div>
 
-
           <div>
-
             <Label>Budget</Label>
 
             <Input
@@ -135,12 +122,9 @@ export default function EditProjectDialog({
               value={form.budget}
               onChange={handleChange}
             />
-
           </div>
 
-
           <div>
-
             <Label>Deadline</Label>
 
             <Input
@@ -149,12 +133,9 @@ export default function EditProjectDialog({
               value={form.deadline}
               onChange={handleChange}
             />
-
           </div>
 
-
           <div>
-
             <Label>Description</Label>
 
             <Textarea
@@ -162,26 +143,13 @@ export default function EditProjectDialog({
               value={form.description}
               onChange={handleChange}
             />
-
           </div>
 
-
-          <Button
-            onClick={updateProject}
-            disabled={loading}
-            className="w-full"
-          >
-
+          <Button onClick={updateProject} disabled={loading} className="w-full">
             {loading ? "Updating..." : "Update Project"}
-
           </Button>
-
         </div>
-
       </DialogContent>
-
     </Dialog>
-
   );
-
 }

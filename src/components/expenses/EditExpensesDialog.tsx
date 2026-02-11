@@ -23,6 +23,8 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { toast } from "sonner";
 
+import { ExpenseSchema } from "@/lib/validation";
+
 export default function EditExpenseDialog({
   expense,
   onUpdated,
@@ -47,9 +49,18 @@ export default function EditExpenseDialog({
   });
 
   async function updateExpense() {
-    if (!form.title) {
-      toast.error("Title required");
+    // Validate input
+    const result = ExpenseSchema.safeParse({
+      title: form.title,
+      amount: Number(form.amount),
+      category: form.category,
+      date: form.date,
+      notes: form.notes,
+    });
 
+    if (!result.success) {
+      const errors = result.error.issues.map((e) => e.message).join(", ");
+      toast.error(errors);
       return;
     }
 

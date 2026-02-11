@@ -27,6 +27,10 @@ import {
 
 import { Label } from "@/components/ui/label";
 
+import { InvoiceSchema, InvoiceItemSchema } from "@/lib/validation";
+
+import { toast } from "sonner";
+
 export default function AddInvoiceDialog({ onAdded }: { onAdded: () => void }) {
   const [open, setOpen] = useState(false);
 
@@ -82,10 +86,16 @@ export default function AddInvoiceDialog({ onAdded }: { onAdded: () => void }) {
 
   const calculateTotal = () => items.reduce((sum, item) => sum + item.total, 0);
 
-  const updateItem = (index: number, field: string, value: any) => {
+  const updateItem = (index: number, field: string, value: string | number) => {
     const newItems = [...items];
 
-    newItems[index][field] = value;
+    if (field === "description") {
+      newItems[index].description = value as string;
+    } else if (field === "quantity") {
+      newItems[index].quantity = value as number;
+    } else if (field === "unit_price") {
+      newItems[index].unit_price = value as number;
+    }
 
     newItems[index].total =
       newItems[index].quantity * newItems[index].unit_price;
@@ -105,6 +115,32 @@ export default function AddInvoiceDialog({ onAdded }: { onAdded: () => void }) {
     ]);
 
   const createInvoice = async () => {
+    // Validate invoice
+    const invoiceResult = InvoiceSchema.safeParse({
+      client_id: clientId,
+      project_id: projectId,
+      issue_date: issueDate,
+      due_date: dueDate,
+    });
+
+    if (!invoiceResult.success) {
+      const errors = invoiceResult.error.issues
+        .map((e) => e.message)
+        .join(", ");
+      toast.error(errors);
+      return;
+    }
+
+    // Validate all items
+    for (let i = 0; i < items.length; i++) {
+      const itemResult = InvoiceItemSchema.safeParse(items[i]);
+      if (!itemResult.success) {
+        const errors = itemResult.error.issues.map((e) => e.message).join(", ");
+        toast.error(`Item ${i + 1}: ${errors}`);
+        return;
+      }
+    }
+
     const total = calculateTotal();
 
     const invoice_number = "INV-" + Date.now();
@@ -132,7 +168,7 @@ export default function AddInvoiceDialog({ onAdded }: { onAdded: () => void }) {
       .single();
 
     if (error) {
-      console.error(error);
+      toast.error(error.message);
       return;
     }
 
@@ -144,6 +180,7 @@ export default function AddInvoiceDialog({ onAdded }: { onAdded: () => void }) {
 
     await supabase.from("invoice_items").insert(itemsToInsert);
 
+    toast.success("Invoice created");
     setOpen(false);
 
     onAdded();

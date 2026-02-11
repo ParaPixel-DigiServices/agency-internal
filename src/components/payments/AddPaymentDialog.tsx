@@ -14,6 +14,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PaymentSchema } from "@/lib/validation";
+import { toast } from "sonner";
 
 interface Client {
   id: string;
@@ -97,7 +99,19 @@ export default function AddPaymentDialog({
   };
 
   const handleSubmit = async () => {
-    if (!form.client_id || !form.project_id || !form.amount) return;
+    // Validate input
+    const result = PaymentSchema.safeParse({
+      client_id: form.client_id,
+      project_id: form.project_id,
+      amount: Number(form.amount),
+      method: form.method,
+    });
+
+    if (!result.success) {
+      const errors = result.error.issues.map((e) => e.message).join(", ");
+      toast.error(errors);
+      return;
+    }
 
     setLoading(true);
 
@@ -120,10 +134,11 @@ export default function AddPaymentDialog({
         method: "",
       });
 
+      toast.success("Payment created");
       setOpen(false);
       onPaymentAdded();
     } else {
-      alert(error.message);
+      toast.error(error.message);
     }
   };
 

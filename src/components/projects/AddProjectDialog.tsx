@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { supabase } from "@/lib/supabase/client"
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase/client";
 
 import {
   Dialog,
@@ -9,115 +9,115 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ProjectSchema } from "@/lib/validation";
+import { toast } from "sonner";
 
 interface Client {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 export default function AddProjectDialog({
   onProjectAdded,
 }: {
-  onProjectAdded: () => void
+  onProjectAdded: () => void;
 }) {
+  const [open, setOpen] = useState(false);
 
-  const [open, setOpen] = useState(false)
-
-  const [clients, setClients] = useState<Client[]>([])
+  const [clients, setClients] = useState<Client[]>([]);
 
   const [form, setForm] = useState({
     name: "",
     client_id: "",
     budget: "",
     deadline: "",
-  })
+  });
 
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchClients()
-  }, [])
+    fetchClients();
+  }, []);
 
   const fetchClients = async () => {
-    const { data } = await supabase
-      .from("clients")
-      .select("id, name")
+    const { data } = await supabase.from("clients").select("id, name");
 
-    if (data) setClients(data)
-  }
+    if (data) setClients(data);
+  };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     setForm({
       ...form,
       [e.target.name]: e.target.value,
-    })
-  }
+    });
+  };
 
   const handleSubmit = async () => {
+    // Validate input
+    const result = ProjectSchema.safeParse({
+      name: form.name,
+      client_id: form.client_id,
+      budget: form.budget ? Number(form.budget) : 0,
+      deadline: form.deadline,
+    });
 
-    if (!form.name || !form.client_id) return
+    if (!result.success) {
+      const errors = result.error.issues.map((e) => e.message).join(", ");
+      toast.error(errors);
+      return;
+    }
 
-    setLoading(true)
+    setLoading(true);
 
-    const { error } = await supabase
-      .from("projects")
-      .insert([
-        {
-          name: form.name,
-          client_id: form.client_id,
-          budget: form.budget ? Number(form.budget) : null,
-          deadline: form.deadline || null,
-        },
-      ])
+    const { error } = await supabase.from("projects").insert([
+      {
+        name: form.name,
+        client_id: form.client_id,
+        budget: form.budget ? Number(form.budget) : null,
+        deadline: form.deadline || null,
+      },
+    ]);
 
-    setLoading(false)
+    setLoading(false);
 
     if (!error) {
-
       setForm({
         name: "",
         client_id: "",
         budget: "",
         deadline: "",
-      })
+      });
 
-      setOpen(false)
-      onProjectAdded()
-
+      toast.success("Project created");
+      setOpen(false);
+      onProjectAdded();
     } else {
-      alert(error.message)
+      toast.error(error.message);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-
       <DialogTrigger asChild>
         <Button>Add Project</Button>
       </DialogTrigger>
 
       <DialogContent>
-
         <DialogHeader>
           <DialogTitle>Add Project</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-
           <div>
             <Label>Project Name *</Label>
-            <Input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-            />
+            <Input name="name" value={form.name} onChange={handleChange} />
           </div>
 
           <div>
@@ -129,7 +129,6 @@ export default function AddProjectDialog({
               onChange={handleChange}
               className="w-full border rounded p-2 bg-background"
             >
-
               <option value="">Select client</option>
 
               {clients.map((client) => (
@@ -137,9 +136,7 @@ export default function AddProjectDialog({
                   {client.name}
                 </option>
               ))}
-
             </select>
-
           </div>
 
           <div>
@@ -162,18 +159,11 @@ export default function AddProjectDialog({
             />
           </div>
 
-          <Button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="w-full"
-          >
+          <Button onClick={handleSubmit} disabled={loading} className="w-full">
             {loading ? "Adding..." : "Add Project"}
           </Button>
-
         </div>
-
       </DialogContent>
-
     </Dialog>
-  )
+  );
 }

@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 
 import Sidebar from "@/components/layouts/Sidebar";
 import AuthGuard from "@/components/AuthGuard";
+import SessionMonitor from "@/components/SessionMonitor";
+import { Toaster } from "sonner";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -33,8 +35,11 @@ export default function RootLayout({
       </head>
       <body>
         <AuthGuard>
-          <LayoutContent>{children}</LayoutContent>
+          <SessionMonitor>
+            <LayoutContent>{children}</LayoutContent>
+          </SessionMonitor>
         </AuthGuard>
+        <Toaster position="top-right" richColors />
       </body>
     </html>
   );
