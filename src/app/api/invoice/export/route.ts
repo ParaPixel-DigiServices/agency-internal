@@ -302,11 +302,17 @@ export async function POST(req: Request) {
       },
     });
   } catch (err) {
-    console.error("PDF generation error:", err);
+    // Log error securely (remove in production or use proper logging service)
+    if (process.env.NODE_ENV === "development") {
+      console.error("PDF generation error:", err);
+    }
 
     if (page) await page.close().catch(() => {});
     if (browser) await browser.disconnect().catch(() => {});
 
-    return NextResponse.json({ error: "PDF failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to generate PDF. Please try again." },
+      { status: 500 },
+    );
   }
 }

@@ -146,7 +146,9 @@ export default function AddExpenseDialog({
 
       onAdded();
     } catch (err) {
-      console.error(err);
+      if (process.env.NODE_ENV === "development") {
+        console.error(err);
+      }
 
       toast.error("Failed to create expense");
     } finally {

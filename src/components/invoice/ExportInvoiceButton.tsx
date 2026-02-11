@@ -59,7 +59,9 @@ export default function ExportInvoiceButton({
 
         const text = await res.text();
 
-        console.error("Export failed:", text);
+        if (process.env.NODE_ENV === "development") {
+          console.error("Export failed:", text);
+        }
 
         toast.error("Failed to export invoice");
 
@@ -86,7 +88,9 @@ export default function ExportInvoiceButton({
 
       toast.success("Invoice exported");
     } catch (error) {
-      console.error("Export error:", error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Export error:", error);
+      }
 
       toast.error("Export failed");
     } finally {

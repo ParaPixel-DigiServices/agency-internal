@@ -8,7 +8,7 @@ import { toast } from "sonner";
 // Session timeout configuration
 const SESSION_TIMEOUT =
   process.env.NODE_ENV === "development"
-    ? 2 * 60 * 1000 // 2 minutes for dev (easy testing)
+    ? 1 * 60 * 1000 // 1 minute for dev (easy testing)
     : 8 * 60 * 60 * 1000; // 8 hours for production
 
 const WARNING_BEFORE_TIMEOUT = 30 * 1000; // 30 seconds warning

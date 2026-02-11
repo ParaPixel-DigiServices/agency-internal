@@ -41,7 +41,9 @@ export default function ProjectsPage() {
       .order("created_at", { ascending: false });
 
     if (projectsError) {
-      console.error(projectsError);
+      if (process.env.NODE_ENV === "development") {
+        console.error(projectsError);
+      }
       setLoading(false);
       return;
     }
@@ -52,7 +54,9 @@ export default function ProjectsPage() {
       .select("project_id, amount");
 
     if (paymentsError) {
-      console.error(paymentsError);
+      if (process.env.NODE_ENV === "development") {
+        console.error(paymentsError);
+      }
     }
 
     // Create payment sum map
