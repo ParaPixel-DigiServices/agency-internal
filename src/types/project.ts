@@ -4,7 +4,7 @@ export interface Project {
   client_id: string
   budget: number | null
   status: string
-  deadline: string | null
+  description: string | null
   created_at: string
 
   clients?: {
