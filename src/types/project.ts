@@ -1,18 +1,18 @@
 export interface Project {
-  id: string
-  name: string
-  client_id: string
-  budget: number | null
-  status: string
-  description: string | null
-  created_at: string
+  id: string;
+  name: string;
+  client_id: string;
+  budget: number | null;
+  status: string;
+  description: string | null;
+  created_at: string;
 
   clients?: {
-    name: string
-  }
+    name: string;
+  };
 
-  total_paid?: number
-  outstanding?: number
+  total_paid?: number;
+  outstanding?: number;
 
-  payment_status?: "Paid" | "Partial" | "Unpaid"
+  payment_status?: "Paid" | "Partial" | "Unpaid";
 }
