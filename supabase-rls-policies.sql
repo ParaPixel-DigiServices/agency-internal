@@ -9,6 +9,7 @@
 -- Security Model:
 -- - Only authenticated users with @parapixel.net emails can access data
 -- - All CRUD operations require valid authentication
+-- - Optimized with (select auth.jwt()) for performance at scale
 -- =====================================================
 
 -- =====================================================
@@ -32,7 +33,7 @@ CREATE POLICY "Allow parapixel users to view clients"
   ON clients
   FOR SELECT
   USING (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 -- Policy: Allow authenticated @parapixel.net users to INSERT clients
@@ -40,7 +41,7 @@ CREATE POLICY "Allow parapixel users to insert clients"
   ON clients
   FOR INSERT
   WITH CHECK (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 -- Policy: Allow authenticated @parapixel.net users to UPDATE clients
@@ -48,10 +49,10 @@ CREATE POLICY "Allow parapixel users to update clients"
   ON clients
   FOR UPDATE
   USING (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   )
   WITH CHECK (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 -- Policy: Allow authenticated @parapixel.net users to DELETE clients
@@ -59,7 +60,7 @@ CREATE POLICY "Allow parapixel users to delete clients"
   ON clients
   FOR DELETE
   USING (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 
@@ -71,31 +72,31 @@ CREATE POLICY "Allow parapixel users to view projects"
   ON projects
   FOR SELECT
   USING (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 CREATE POLICY "Allow parapixel users to insert projects"
   ON projects
   FOR INSERT
   WITH CHECK (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 CREATE POLICY "Allow parapixel users to update projects"
   ON projects
   FOR UPDATE
   USING (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   )
   WITH CHECK (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 CREATE POLICY "Allow parapixel users to delete projects"
   ON projects
   FOR DELETE
   USING (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 
@@ -107,31 +108,31 @@ CREATE POLICY "Allow parapixel users to view payments"
   ON payments
   FOR SELECT
   USING (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 CREATE POLICY "Allow parapixel users to insert payments"
   ON payments
   FOR INSERT
   WITH CHECK (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 CREATE POLICY "Allow parapixel users to update payments"
   ON payments
   FOR UPDATE
   USING (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   )
   WITH CHECK (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 CREATE POLICY "Allow parapixel users to delete payments"
   ON payments
   FOR DELETE
   USING (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 
@@ -143,31 +144,31 @@ CREATE POLICY "Allow parapixel users to view expenses"
   ON expenses
   FOR SELECT
   USING (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 CREATE POLICY "Allow parapixel users to insert expenses"
   ON expenses
   FOR INSERT
   WITH CHECK (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 CREATE POLICY "Allow parapixel users to update expenses"
   ON expenses
   FOR UPDATE
   USING (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   )
   WITH CHECK (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 CREATE POLICY "Allow parapixel users to delete expenses"
   ON expenses
   FOR DELETE
   USING (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 
@@ -179,31 +180,31 @@ CREATE POLICY "Allow parapixel users to view invoices"
   ON invoices
   FOR SELECT
   USING (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 CREATE POLICY "Allow parapixel users to insert invoices"
   ON invoices
   FOR INSERT
   WITH CHECK (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 CREATE POLICY "Allow parapixel users to update invoices"
   ON invoices
   FOR UPDATE
   USING (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   )
   WITH CHECK (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 CREATE POLICY "Allow parapixel users to delete invoices"
   ON invoices
   FOR DELETE
   USING (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 
@@ -215,31 +216,31 @@ CREATE POLICY "Allow parapixel users to view invoice items"
   ON invoice_items
   FOR SELECT
   USING (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 CREATE POLICY "Allow parapixel users to insert invoice items"
   ON invoice_items
   FOR INSERT
   WITH CHECK (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 CREATE POLICY "Allow parapixel users to update invoice items"
   ON invoice_items
   FOR UPDATE
   USING (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   )
   WITH CHECK (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 CREATE POLICY "Allow parapixel users to delete invoice items"
   ON invoice_items
   FOR DELETE
   USING (
-    auth.jwt() ->> 'email' LIKE '%@parapixel.net'
+    (select auth.jwt()) ->> 'email' LIKE '%@parapixel.net'
   );
 
 

@@ -262,22 +262,23 @@ This will:
 SELECT * FROM clients;
 ````
 
-If not authenticated, this should return 0 rows.lient_id uuid references clients(id),
-project_id uuid references projects(id),
-issue_date date,
-due_date date,
-amount numeric not null,
-status text,
-created_at timestamp with time zone default now()
-);
+If not authenticated, this should return 0 rows.
 
-````
+#### Function Search Path Security Fix
+
+If you see warnings about "role mutable search_path" for database functions:
+
+1. Open the file `fix-function-search-path.sql` from the project root
+2. Copy all SQL content and paste into Supabase SQL Editor
+3. Click **Run** to fix the security warnings
+
+This sets explicit search_path on trigger functions to prevent search_path injection attacks.
 
 ### 5. Run the Development Server
 
 ```bash
 npm run dev
-````
+```
 
 Open [http://localhost:3000](http://localhost:3000) and sign in with your @parapixel.net Google account.
 
